@@ -1,0 +1,38 @@
+services:
+  # 1. PostgreSQL Database
+  - type: pgo
+    name: wareopt-db
+    plan: free
+
+  # 2. Spring Boot Backend
+  - type: web
+    name: wareopt-backend
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /api/shifts
+    envVars:
+      # Map the postgres properties explicitly
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${wareopt-db.host}:${wareopt-db.port}/${wareopt-db.database}
+      - key: SPRING_DATASOURCE_USERNAME
+        value: ${wareopt-db.user}
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: ${wareopt-db.password}
+      # Hibernate config to automatically execute our schema initialization on Render
+      - key: SPRING_SQL_INIT_MODE
+        value: always
+
+  # 3. React Frontend
+  - type: web
+    name: wareopt-frontend
+    env: docker
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        # In Render, web services get a standard onrender.com host
+        # We point the frontend build at the deployed backend service URL
+        value: https://wareopt-backend.onrender.com/api

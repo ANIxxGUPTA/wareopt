@@ -1,16 +1,54 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15
+  postgres:
+    image: postgres:16-alpine
+    container_name: wareopt-db
     environment:
-      POSTGRES_USER: wareopt
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: wareoptdb
+      POSTGRES_DB: wareopt
+      POSTGRES_USER: wareopt_user
+      POSTGRES_PASSWORD: wareopt_password
     ports:
       - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      # Mount the initialization scripts
+      - ./db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wareopt_user -d wareopt"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: wareopt-backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/wareopt
+      - SPRING_DATASOURCE_USERNAME=wareopt_user
+      - SPRING_DATASOURCE_PASSWORD=wareopt_password
+      # Spring profiles or any other env variables can go here
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/api/shifts"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: wareopt-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
-  db-data:
+  pgdata:
