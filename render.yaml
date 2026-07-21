@@ -1,5 +1,5 @@
 databases:
-  - name: wareopt_db
+  - name: wareopt-db
       plan: free
 
       services:
