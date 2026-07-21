@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Maven Tests
         working-directory: ./backend
-        run: ./mvnw -B test
+        run: mvn -B test
 
   frontend-build:
     name: Frontend Build (React)
