@@ -69,13 +69,31 @@ export interface DeliveryOptimizationResponse {
 }
 
 export const getShifts = () => api.get<Shift[]>('/shifts');
+export const createShift = (shift: Partial<Shift>) => api.post<Shift>('/shifts', shift);
+export const updateShift = (id: number, shift: Partial<Shift>) => api.put<Shift>(`/shifts/${id}`, shift);
+export const deleteShift = (id: number) => api.delete(`/shifts/${id}`);
+
 export const getWorkers = () => api.get<Worker[]>('/workers');
+export const createWorker = (worker: Partial<Worker>) => api.post<Worker>('/workers', worker);
+export const updateWorker = (id: number, worker: Partial<Worker>) => api.put<Worker>(`/workers/${id}`, worker);
+export const deleteWorker = (id: number) => api.delete(`/workers/${id}`);
+
 export const getShiftAssignments = (shiftId: number) => api.get<ShiftAssignment[]>(`/shifts/${shiftId}/assignments`);
 export const optimizeShifts = () => api.post<ShiftOptimizationResponse>('/optimize/shifts');
 
 export const getDeliveryOrders = () => api.get<DeliveryOrder[]>('/delivery-orders');
+export const createDeliveryOrder = (order: Partial<DeliveryOrder>) => api.post<DeliveryOrder>('/delivery-orders', order);
+export const updateDeliveryOrder = (id: number, order: Partial<DeliveryOrder>) => api.put<DeliveryOrder>(`/delivery-orders/${id}`, order);
+export const deleteDeliveryOrder = (id: number) => api.delete(`/delivery-orders/${id}`);
+
 export const getDeliverySlots = () => api.get<DeliverySlot[]>('/delivery-slots');
+export const createDeliverySlot = (slot: Partial<DeliverySlot>) => api.post<DeliverySlot>('/delivery-slots', slot);
+export const updateDeliverySlot = (id: number, slot: Partial<DeliverySlot>) => api.put<DeliverySlot>(`/delivery-slots/${id}`, slot);
+export const deleteDeliverySlot = (id: number) => api.delete(`/delivery-slots/${id}`);
+
 export const getSlotAssignments = (slotId: number) => api.get<SlotAssignment[]>(`/delivery-slots/${slotId}/assignments`);
 export const optimizeDelivery = () => api.post<DeliveryOptimizationResponse>('/optimize/delivery');
+
+export const resetDatabase = () => api.delete('/reset');
 
 export default api;

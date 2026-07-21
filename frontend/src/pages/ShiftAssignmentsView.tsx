@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import { getShifts, optimizeShifts } from '../services/api';
-import type { Shift, ShiftAssignment } from '../services/api';
-import { AlertCircle, Loader2, Play } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { getShifts, optimizeShifts, getWorkers, createWorker, updateWorker, deleteWorker, createShift, updateShift, deleteShift } from '../services/api';
+import type { Shift, ShiftAssignment, Worker } from '../services/api';
+import { AlertCircle, Loader2, Play, Plus, Edit2, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { Modal } from '../components/Modal';
 
 export const ShiftAssignmentsView = () => {
+  const [activeTab, setActiveTab] = useState<'optimize' | 'workers' | 'shifts'>('optimize');
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [workers, setWorkers] = useState<Worker[]>([]);
   const [assignments, setAssignments] = useState<ShiftAssignment[]>([]);
   
   const [loading, setLoading] = useState(false);
@@ -13,16 +16,24 @@ export const ShiftAssignmentsView = () => {
   
   const [resultStats, setResultStats] = useState<{cost: number, time: number} | null>(null);
 
+  // Modal states
+  const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<Partial<Worker> | null>(null);
+  const [editingShift, setEditingShift] = useState<Partial<Shift> | null>(null);
+
   useEffect(() => {
-    fetchShifts();
+    fetchData();
   }, []);
 
-  const fetchShifts = async () => {
+  const fetchData = async () => {
     try {
-      const res = await getShifts();
-      setShifts(res.data);
+      const [shiftRes, workerRes] = await Promise.all([getShifts(), getWorkers()]);
+      setShifts(shiftRes.data);
+      setWorkers(workerRes.data);
     } catch (err) {
       console.error(err);
+      setError("Failed to fetch data.");
     }
   };
 
@@ -49,7 +60,58 @@ export const ShiftAssignmentsView = () => {
     }
   };
 
-  // Group assignments by shift
+  const handleSaveWorker = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      if (editingWorker?.id) {
+        await updateWorker(editingWorker.id, editingWorker);
+      } else {
+        await createWorker(editingWorker!);
+      }
+      setIsWorkerModalOpen(false);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to save worker.");
+    }
+  };
+
+  const handleDeleteWorker = async (id: number) => {
+    if (!window.confirm("Delete this worker?")) return;
+    try {
+      await deleteWorker(id);
+      fetchData();
+    } catch (err: any) {
+      setError("Failed to delete worker.");
+    }
+  };
+
+  const handleSaveShift = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      if (editingShift?.id) {
+        await updateShift(editingShift.id, editingShift);
+      } else {
+        await createShift(editingShift!);
+      }
+      setIsShiftModalOpen(false);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to save shift.");
+    }
+  };
+
+  const handleDeleteShift = async (id: number) => {
+    if (!window.confirm("Delete this shift?")) return;
+    try {
+      await deleteShift(id);
+      fetchData();
+    } catch (err: any) {
+      setError("Failed to delete shift.");
+    }
+  };
+
   const assignmentsByShift = assignments.reduce((acc, curr) => {
     if (!acc[curr.shift.id]) acc[curr.shift.id] = [];
     acc[curr.shift.id].push(curr);
@@ -61,81 +123,234 @@ export const ShiftAssignmentsView = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Shift Assignments</h2>
-          <p className="text-sm text-gray-500">Run CP-SAT solver to assign workers to shifts minimizing cost.</p>
+          <p className="text-sm text-gray-500">Manage workers, shifts, and run optimization.</p>
         </div>
+      </div>
+
+      <div className="flex border-b border-gray-200">
         <button
-          onClick={handleOptimize}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+          onClick={() => setActiveTab('optimize')}
+          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'optimize' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-          Run Optimization
+          Optimization & Results
+        </button>
+        <button
+          onClick={() => setActiveTab('workers')}
+          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'workers' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Manage Workers
+        </button>
+        <button
+          onClick={() => setActiveTab('shifts')}
+          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'shifts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Manage Shifts
         </button>
       </div>
 
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
           <p className="text-red-700 text-sm font-medium">{error}</p>
         </div>
       )}
 
-      {resultStats && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 flex gap-8">
-          <div>
-            <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Total Labor Cost</p>
-            <p className="text-2xl font-bold text-emerald-600">${resultStats.cost.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Solve Time</p>
-            <p className="text-2xl font-bold text-emerald-600">{resultStats.time} ms</p>
+      {activeTab === 'workers' && (
+        <div className="space-y-4">
+          <button onClick={() => { setEditingWorker({ skills: [] }); setIsWorkerModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+            <Plus className="w-4 h-4" /> Add Worker
+          </button>
+          <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost/Hr</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Max Hrs/Wk</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Skills</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {workers.map(w => (
+                  <tr key={w.id}>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{w.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">${w.hourlyCost}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{w.maxHoursPerWeek}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{w.skills?.join(', ')}</td>
+                    <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
+                      <button onClick={() => { setEditingWorker(w); setIsWorkerModalOpen(true); }} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4"/></button>
+                      <button onClick={() => handleDeleteWorker(w.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day / Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Req. Workers</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Roster</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {shifts.map((shift) => {
-              const assigned = assignmentsByShift[shift.id] || [];
-              return (
-                <tr key={shift.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    Day {shift.dayOfWeek} • {shift.startTime} - {shift.endTime}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {shift.requiredWorkerCount}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {shift.requiredSkill || 'Any'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {assigned.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {assigned.map(a => (
-                          <span key={a.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {a.worker.name} (${a.worker.hourlyCost}/hr)
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 italic">No assignments yet</span>
-                    )}
-                  </td>
+      {activeTab === 'shifts' && (
+        <div className="space-y-4">
+          <button onClick={() => { setEditingShift({ dayOfWeek: 1 }); setIsShiftModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+            <Plus className="w-4 h-4" /> Add Shift
+          </button>
+          <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day / Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Req. Count</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Skill</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {shifts.map(s => (
+                  <tr key={s.id}>
+                    <td className="px-6 py-4 text-sm text-gray-900">Day {s.dayOfWeek} • {s.startTime} - {s.endTime}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{s.requiredWorkerCount}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{s.requiredSkill}</td>
+                    <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
+                      <button onClick={() => { setEditingShift(s); setIsShiftModalOpen(true); }} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4"/></button>
+                      <button onClick={() => handleDeleteShift(s.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'optimize' && (
+        <div className="space-y-6">
+          <div className="flex justify-end">
+            <button
+              onClick={handleOptimize}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Run Optimization
+            </button>
+          </div>
+
+          {resultStats && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 flex gap-8">
+              <div>
+                <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Total Labor Cost</p>
+                <p className="text-2xl font-bold text-emerald-600">${resultStats.cost.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Solve Time</p>
+                <p className="text-2xl font-bold text-emerald-600">{resultStats.time} ms</p>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day / Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Req. Workers</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Roster</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {shifts.map((shift) => {
+                  const assigned = assignmentsByShift[shift.id] || [];
+                  return (
+                    <tr key={shift.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        Day {shift.dayOfWeek} • {shift.startTime} - {shift.endTime}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {shift.requiredWorkerCount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {shift.requiredSkill || 'Any'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {assigned.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {assigned.map(a => (
+                              <span key={a.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {a.worker.name} (${a.worker.hourlyCost}/hr)
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">No assignments yet</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Worker Modal */}
+      <Modal isOpen={isWorkerModalOpen} onClose={() => setIsWorkerModalOpen(false)} title={editingWorker?.id ? "Edit Worker" : "Add Worker"}>
+        <form onSubmit={handleSaveWorker} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <input required type="text" value={editingWorker?.name || ''} onChange={e => setEditingWorker({...editingWorker, name: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Hourly Cost ($)</label>
+              <input required type="number" min="0.01" step="0.01" value={editingWorker?.hourlyCost || ''} onChange={e => setEditingWorker({...editingWorker, hourlyCost: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Max Hours/Week</label>
+              <input required type="number" min="1" value={editingWorker?.maxHoursPerWeek || ''} onChange={e => setEditingWorker({...editingWorker, maxHoursPerWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Skills (comma-separated)</label>
+            <input required type="text" value={editingWorker?.skills?.join(', ') || ''} onChange={e => setEditingWorker({...editingWorker, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking, packing" />
+          </div>
+          <button type="submit" className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700">Save Worker</button>
+        </form>
+      </Modal>
+
+      {/* Shift Modal */}
+      <Modal isOpen={isShiftModalOpen} onClose={() => setIsShiftModalOpen(false)} title={editingShift?.id ? "Edit Shift" : "Add Shift"}>
+        <form onSubmit={handleSaveShift} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Day of Week (1-7)</label>
+            <input required type="number" min="1" max="7" value={editingShift?.dayOfWeek || ''} onChange={e => setEditingShift({...editingShift, dayOfWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Start Time</label>
+              <input required type="time" step="1" value={editingShift?.startTime || ''} onChange={e => setEditingShift({...editingShift, startTime: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">End Time</label>
+              <input required type="time" step="1" value={editingShift?.endTime || ''} onChange={e => setEditingShift({...editingShift, endTime: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Required Workers</label>
+              <input required type="number" min="1" value={editingShift?.requiredWorkerCount || ''} onChange={e => setEditingShift({...editingShift, requiredWorkerCount: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Required Skill</label>
+              <input required type="text" value={editingShift?.requiredSkill || ''} onChange={e => setEditingShift({...editingShift, requiredSkill: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking" />
+            </div>
+          </div>
+          <button type="submit" className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700">Save Shift</button>
+        </form>
+      </Modal>
+
     </div>
   );
 };
