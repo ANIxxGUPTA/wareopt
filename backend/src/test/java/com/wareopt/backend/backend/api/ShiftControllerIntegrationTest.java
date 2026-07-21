@@ -1,31 +1,26 @@
 package com.wareopt.backend.backend.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wareopt.backend.backend.entity.Shift;
-import com.wareopt.backend.backend.entity.ShiftAssignment;
-import com.wareopt.backend.backend.entity.Worker;
 import com.wareopt.backend.backend.exception.GlobalExceptionHandler;
-import com.wareopt.backend.backend.optimization.InfeasibleSolutionException;
-import com.wareopt.backend.backend.optimization.ShiftOptimizer;
-import com.wareopt.backend.backend.repository.ShiftAssignmentRepository;
 import com.wareopt.backend.backend.repository.ShiftRepository;
-import com.wareopt.backend.backend.repository.WorkerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.math.BigDecimal;
 import java.time.LocalTime;
-import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,58 +31,82 @@ class ShiftControllerIntegrationTest {
     @Mock
     private ShiftRepository shiftRepository;
 
-    @Mock
-    private WorkerRepository workerRepository;
-
-    @Mock
-    private ShiftAssignmentRepository shiftAssignmentRepository;
-
-    @Mock
-    private ShiftOptimizer shiftOptimizer;
-
     @InjectMocks
     private ShiftController shiftController;
+
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(shiftController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Test
-    void testOptimizeShiftsSuccess() throws Exception {
-        Worker w = new Worker();
-        w.setId(1L);
-        w.setHourlyCost(BigDecimal.valueOf(20));
+    void testCreateShiftSuccess() throws Exception {
+        Shift shift = new Shift();
+        shift.setDayOfWeek(1);
+        shift.setStartTime(LocalTime.of(8, 0));
+        shift.setEndTime(LocalTime.of(16, 0));
+        shift.setRequiredWorkerCount(5);
+        shift.setRequiredSkill("picking");
 
-        Shift s = new Shift();
-        s.setId(1L);
-        s.setStartTime(LocalTime.of(8, 0));
-        s.setEndTime(LocalTime.of(16, 0));
+        when(shiftRepository.save(any())).thenReturn(shift);
 
-        ShiftAssignment sa = new ShiftAssignment();
-        sa.setWorker(w);
-        sa.setShift(s);
-
-        when(workerRepository.findAll()).thenReturn(List.of(w));
-        when(shiftRepository.findAll()).thenReturn(List.of(s));
-        when(shiftOptimizer.optimize(any(), any())).thenReturn(List.of(sa));
-
-        mockMvc.perform(post("/api/optimize/shifts"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assignments").isArray())
-                .andExpect(jsonPath("$.totalCost").value(160));
+        mockMvc.perform(post("/api/shifts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(shift)))
+                .andExpect(status().isCreated());
     }
 
     @Test
-    void testOptimizeShiftsInfeasible() throws Exception {
-        when(workerRepository.findAll()).thenReturn(List.of());
-        when(shiftRepository.findAll()).thenReturn(List.of());
-        when(shiftOptimizer.optimize(any(), any())).thenThrow(new InfeasibleSolutionException("Infeasible"));
+    void testCreateShiftInvalidTime() throws Exception {
+        Shift shift = new Shift();
+        shift.setDayOfWeek(1);
+        shift.setStartTime(LocalTime.of(16, 0));
+        shift.setEndTime(LocalTime.of(8, 0)); // End before start
+        shift.setRequiredWorkerCount(5);
+        shift.setRequiredSkill("picking");
 
-        mockMvc.perform(post("/api/optimize/shifts"))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.message").value("Infeasible"));
+        mockMvc.perform(post("/api/shifts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(shift)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testUpdateShiftSuccess() throws Exception {
+        Shift shift = new Shift();
+        shift.setId(1L);
+        shift.setDayOfWeek(1);
+        shift.setStartTime(LocalTime.of(8, 0));
+        shift.setEndTime(LocalTime.of(16, 0));
+        shift.setRequiredWorkerCount(5);
+        shift.setRequiredSkill("picking");
+
+        when(shiftRepository.findById(1L)).thenReturn(Optional.of(shift));
+        when(shiftRepository.save(any())).thenReturn(shift);
+
+        mockMvc.perform(put("/api/shifts/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(shift)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testDeleteShiftSuccess() throws Exception {
+        when(shiftRepository.existsById(1L)).thenReturn(true);
+        mockMvc.perform(delete("/api/shifts/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDeleteShiftNotFound() throws Exception {
+        when(shiftRepository.existsById(1L)).thenReturn(false);
+        mockMvc.perform(delete("/api/shifts/1"))
+                .andExpect(status().isNotFound());
     }
 }

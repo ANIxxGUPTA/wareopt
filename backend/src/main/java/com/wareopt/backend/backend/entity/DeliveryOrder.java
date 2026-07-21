@@ -1,6 +1,8 @@
 package com.wareopt.backend.backend.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -11,15 +13,20 @@ public class DeliveryOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Destination latitude is required")
     @Column(name = "destination_lat", nullable = false)
     private BigDecimal destinationLat;
 
+    @NotNull(message = "Destination longitude is required")
     @Column(name = "destination_lng", nullable = false)
     private BigDecimal destinationLng;
 
+    @NotNull(message = "Deadline is required")
     @Column(nullable = false)
     private LocalDateTime deadline;
 
+    @NotNull(message = "Weight is required")
+    @Positive(message = "Weight must be positive")
     @Column(name = "weight_kg", nullable = false)
     private BigDecimal weightKg;
 

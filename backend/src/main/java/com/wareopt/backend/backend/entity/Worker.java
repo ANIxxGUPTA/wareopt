@@ -3,6 +3,9 @@ package com.wareopt.backend.backend.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -13,12 +16,17 @@ public class Worker {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Name cannot be blank")
     @Column(nullable = false)
     private String name;
 
+    @NotNull(message = "Hourly cost is required")
+    @Positive(message = "Hourly cost must be positive")
     @Column(name = "hourly_cost", nullable = false)
     private BigDecimal hourlyCost;
 
+    @NotNull(message = "Max hours per week is required")
+    @Positive(message = "Max hours per week must be positive")
     @Column(name = "max_hours_per_week", nullable = false)
     private Integer maxHoursPerWeek;
 

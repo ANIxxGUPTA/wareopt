@@ -8,8 +8,12 @@ import com.wareopt.backend.backend.optimization.ShiftOptimizer;
 import com.wareopt.backend.backend.repository.ShiftAssignmentRepository;
 import com.wareopt.backend.backend.repository.ShiftRepository;
 import com.wareopt.backend.backend.repository.WorkerRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -37,9 +41,42 @@ public class ShiftController {
         return shiftRepository.findAll();
     }
 
-    @GetMapping("/workers")
-    public List<Worker> getAllWorkers() {
-        return workerRepository.findAll();
+    @PostMapping("/shifts")
+    public ResponseEntity<Shift> createShift(@Valid @RequestBody Shift shift) {
+        if (!shift.getEndTime().isAfter(shift.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        }
+        shift.setId(null);
+        Shift savedShift = shiftRepository.save(shift);
+        return new ResponseEntity<>(savedShift, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/shifts/{id}")
+    public ResponseEntity<Shift> updateShift(@PathVariable Long id, @Valid @RequestBody Shift shiftDetails) {
+        Shift shift = shiftRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shift not found"));
+
+        if (!shiftDetails.getEndTime().isAfter(shiftDetails.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        }
+
+        shift.setDayOfWeek(shiftDetails.getDayOfWeek());
+        shift.setStartTime(shiftDetails.getStartTime());
+        shift.setEndTime(shiftDetails.getEndTime());
+        shift.setRequiredWorkerCount(shiftDetails.getRequiredWorkerCount());
+        shift.setRequiredSkill(shiftDetails.getRequiredSkill());
+
+        Shift updatedShift = shiftRepository.save(shift);
+        return ResponseEntity.ok(updatedShift);
+    }
+
+    @DeleteMapping("/shifts/{id}")
+    public ResponseEntity<Void> deleteShift(@PathVariable Long id) {
+        if (!shiftRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shift not found");
+        }
+        shiftRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/shifts/{id}/assignments")
