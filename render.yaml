@@ -1,38 +1,47 @@
 databases:
   - name: wareopt-db
-      plan: free
+    plan: free
 
-      services:
-        # 2. Spring Boot Backend
-          - type: web
-              name: wareopt-backend
-                  env: docker
-                      dockerContext: ./backend
-                          dockerfilePath: ./backend/Dockerfile
-                              plan: free
-                                  healthCheckPath: /api/shifts
-                                      envVars:
-                                            # Map the postgres properties explicitly
-                                                  - key: SPRING_DATASOURCE_URL
-                                                          value: jdbc:postgresql://${wareopt_db.host}:${wareopt_db.port}/${wareopt_db.database}
-                                                                - key: SPRING_DATASOURCE_USERNAME
-                                                                        value: ${wareopt_db.user}
-                                                                              - key: SPRING_DATASOURCE_PASSWORD
-                                                                                      value: ${wareopt_db.password}
-                                                                                            # Hibernate config to automatically execute our schema initialization on Render
-                                                                                                  - key: SPRING_SQL_INIT_MODE
-                                                                                              value: always
+services:
+  # Spring Boot Backend
+  - type: web
+    name: wareopt-backend
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /api/shifts
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: wareopt-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: wareopt-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: wareopt-db
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: wareopt-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: wareopt-db
+          property: password
+      - key: SPRING_SQL_INIT_MODE
+        value: always
 
-                                                                                                # 3. React Frontend
-                                                                                                  - type: web
-                                                                                                      name: wareopt-frontend
-                                                                                                          env: docker
-                                                                                                              dockerContext: ./frontend
-                                                                                                                  dockerfilePath: ./frontend/Dockerfile
-                                                                                                                      plan: free
-                                                                                                                          envVars:
-                                                                                                                                - key: VITE_API_URL
-                                                                                                                                        # In Render, web services get a standard onrender.com host
-                                                                                                                                                # We point the frontend build at the deployed backend service URL
-                                                                                                                                                        value: https://wareopt-backend.onrender.com/api
-                                                                                                                                                        
+  # React Frontend
+  - type: web
+    name: wareopt-frontend
+    env: docker
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://wareopt-backend.onrender.com/api
