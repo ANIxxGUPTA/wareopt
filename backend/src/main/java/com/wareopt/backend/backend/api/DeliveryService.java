@@ -4,8 +4,11 @@ import com.wareopt.backend.backend.entity.DeliveryOrder;
 import com.wareopt.backend.backend.entity.DeliveryOrderItem;
 import com.wareopt.backend.backend.entity.InventoryItem;
 import com.wareopt.backend.backend.entity.OrderStatus;
+import com.wareopt.backend.backend.entity.StockMovement;
+import com.wareopt.backend.backend.entity.MovementReason;
 import com.wareopt.backend.backend.repository.DeliveryOrderRepository;
 import com.wareopt.backend.backend.repository.InventoryItemRepository;
+import com.wareopt.backend.backend.repository.StockMovementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,9 @@ public class DeliveryService {
 
     @Autowired
     private InventoryItemRepository InventoryItemRepository;
+
+    @Autowired
+    private StockMovementRepository stockMovementRepository;
 
     @Transactional
     public DeliveryOrder fulfillOrder(Long orderId) {
@@ -40,6 +46,13 @@ public class DeliveryService {
             }
             inventoryItem.setQuantityOnHand(newQuantity);
             InventoryItemRepository.save(inventoryItem);
+
+            StockMovement movement = new StockMovement();
+            movement.setInventoryItemId(inventoryItem.getId());
+            movement.setChangeAmount(-item.getQuantity());
+            movement.setReason(MovementReason.ORDER_FULFILLMENT);
+            movement.setNote("Order ID " + order.getId() + " fulfilled");
+            stockMovementRepository.save(movement);
         }
 
         order.setStatus(OrderStatus.FULFILLED);

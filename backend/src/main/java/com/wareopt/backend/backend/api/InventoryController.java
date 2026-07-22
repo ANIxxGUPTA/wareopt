@@ -1,6 +1,7 @@
 package com.wareopt.backend.backend.api;
 
 import com.wareopt.backend.backend.entity.InventoryItem;
+import com.wareopt.backend.backend.entity.StockMovement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,11 @@ public class InventoryController {
     @GetMapping("/{id:\\d+}")
     public ResponseEntity<InventoryItem> getInventoryItemById(@PathVariable Long id) {
         return ResponseEntity.ok(inventoryService.getInventoryItemById(id));
+    }
+
+    @GetMapping("/{id:\\d+}/history")
+    public List<StockMovement> getInventoryItemHistory(@PathVariable Long id) {
+        return inventoryService.getInventoryItemHistory(id);
     }
 
     @PostMapping

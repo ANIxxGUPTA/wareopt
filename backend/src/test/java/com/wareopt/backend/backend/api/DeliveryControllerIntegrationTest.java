@@ -8,6 +8,7 @@ import com.wareopt.backend.backend.exception.GlobalExceptionHandler;
 import com.wareopt.backend.backend.optimization.DeliverySlotOptimizer;
 import com.wareopt.backend.backend.repository.DeliveryOrderRepository;
 import com.wareopt.backend.backend.repository.DeliverySlotRepository;
+import com.wareopt.backend.backend.repository.InventoryItemRepository;
 import com.wareopt.backend.backend.repository.SlotAssignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class DeliveryControllerIntegrationTest {
 
     @Mock
     private SlotAssignmentRepository slotAssignmentRepository;
+
+    @Mock
+    private InventoryItemRepository inventoryItemRepository;
 
     @Mock
     private DeliverySlotOptimizer deliverySlotOptimizer;
@@ -102,5 +106,29 @@ class DeliveryControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(order)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreateOrderDoesNotDeductInventory() throws Exception {
+        DeliveryOrder order = new DeliveryOrder();
+        order.setDestinationLat(BigDecimal.valueOf(40.0));
+        order.setDestinationLng(BigDecimal.valueOf(-74.0));
+        order.setDeadline(LocalDateTime.now().plusDays(1));
+        order.setWeightKg(BigDecimal.valueOf(10.5));
+        
+        com.wareopt.backend.backend.entity.DeliveryOrderItem item = new com.wareopt.backend.backend.entity.DeliveryOrderItem();
+        com.wareopt.backend.backend.entity.InventoryItem inv = new com.wareopt.backend.backend.entity.InventoryItem();
+        inv.setId(10L);
+        item.setInventoryItem(inv);
+        item.setQuantity(5);
+        order.setItems(java.util.List.of(item));
+
+        when(inventoryItemRepository.findById(10L)).thenReturn(Optional.of(inv));
+        when(deliveryOrderRepository.save(any())).thenReturn(order);
+
+        mockMvc.perform(post("/api/delivery-orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(order)))
+                .andExpect(status().isCreated());
     }
 }

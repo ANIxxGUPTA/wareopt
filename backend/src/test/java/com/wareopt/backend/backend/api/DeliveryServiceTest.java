@@ -6,6 +6,7 @@ import com.wareopt.backend.backend.entity.InventoryItem;
 import com.wareopt.backend.backend.entity.OrderStatus;
 import com.wareopt.backend.backend.repository.DeliveryOrderRepository;
 import com.wareopt.backend.backend.repository.InventoryItemRepository;
+import com.wareopt.backend.backend.repository.StockMovementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,9 @@ public class DeliveryServiceTest {
 
     @Mock
     private InventoryItemRepository inventoryItemRepository;
+
+    @Mock
+    private StockMovementRepository stockMovementRepository;
 
     private DeliveryOrder order;
     private InventoryItem inv;

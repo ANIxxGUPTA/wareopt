@@ -1,7 +1,10 @@
 package com.wareopt.backend.backend.api;
 
 import com.wareopt.backend.backend.entity.InventoryItem;
+import com.wareopt.backend.backend.entity.StockMovement;
+import com.wareopt.backend.backend.entity.MovementReason;
 import com.wareopt.backend.backend.repository.InventoryItemRepository;
+import com.wareopt.backend.backend.repository.StockMovementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,8 +19,17 @@ public class InventoryService {
     @Autowired
     private InventoryItemRepository inventoryItemRepository;
 
+    @Autowired
+    private StockMovementRepository stockMovementRepository;
+
     public List<InventoryItem> getAllInventoryItems() {
         return inventoryItemRepository.findAll();
+    }
+
+    public List<StockMovement> getInventoryItemHistory(Long inventoryItemId) {
+        // Optionally verify if item exists
+        getInventoryItemById(inventoryItemId);
+        return stockMovementRepository.findByInventoryItemIdOrderByTimestampDesc(inventoryItemId);
     }
 
     public List<InventoryItem> getLowStockItems() {
@@ -39,7 +51,18 @@ public class InventoryService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An inventory item with this SKU already exists");
         }
         item.setId(null);
-        return inventoryItemRepository.save(item);
+        InventoryItem savedItem = inventoryItemRepository.save(item);
+        
+        if (savedItem.getQuantityOnHand() > 0) {
+            StockMovement movement = new StockMovement();
+            movement.setInventoryItemId(savedItem.getId());
+            movement.setChangeAmount(savedItem.getQuantityOnHand());
+            movement.setReason(MovementReason.RESTOCK);
+            movement.setNote("Initial stock on creation");
+            stockMovementRepository.save(movement);
+        }
+        
+        return savedItem;
     }
 
     public InventoryItem updateInventoryItem(Long id, InventoryItem itemDetails) {
@@ -51,6 +74,7 @@ public class InventoryService {
         }
 
         InventoryItem item = getInventoryItemById(id);
+        int oldQuantity = item.getQuantityOnHand();
 
         item.setSku(itemDetails.getSku());
         item.setName(itemDetails.getName());
@@ -61,7 +85,18 @@ public class InventoryService {
         item.setReorderThreshold(itemDetails.getReorderThreshold());
         item.setCostPerUnit(itemDetails.getCostPerUnit());
 
-        return inventoryItemRepository.save(item);
+        InventoryItem savedItem = inventoryItemRepository.save(item);
+
+        if (oldQuantity != itemDetails.getQuantityOnHand()) {
+            StockMovement movement = new StockMovement();
+            movement.setInventoryItemId(savedItem.getId());
+            movement.setChangeAmount(itemDetails.getQuantityOnHand() - oldQuantity);
+            movement.setReason(MovementReason.MANUAL_ADJUSTMENT);
+            movement.setNote("Manual adjustment via UI");
+            stockMovementRepository.save(movement);
+        }
+
+        return savedItem;
     }
 
     public void deleteInventoryItem(Long id) {

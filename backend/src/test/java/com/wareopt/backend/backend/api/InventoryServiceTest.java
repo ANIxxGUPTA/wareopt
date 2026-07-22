@@ -2,6 +2,7 @@ package com.wareopt.backend.backend.api;
 
 import com.wareopt.backend.backend.entity.InventoryItem;
 import com.wareopt.backend.backend.repository.InventoryItemRepository;
+import com.wareopt.backend.backend.repository.StockMovementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ class InventoryServiceTest {
 
     @Mock
     private InventoryItemRepository inventoryItemRepository;
+
+    @Mock
+    private StockMovementRepository stockMovementRepository;
 
     @InjectMocks
     private InventoryService inventoryService;

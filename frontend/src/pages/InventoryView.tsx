@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory } from '../services/api';
-import type { InventoryItem } from '../services/api';
-import { AlertCircle, Edit2, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory, getInventoryItemHistory } from '../services/api';
+import type { InventoryItem, StockMovement } from '../services/api';
+import { AlertCircle, Edit2, Plus, Trash2, AlertTriangle, History } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import axios from 'axios';
 
@@ -12,6 +12,10 @@ export const InventoryView = () => {
   const [editingItem, setEditingItem] = useState<Partial<InventoryItem>>({});
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyItems, setHistoryItems] = useState<StockMovement[]>([]);
+  const [historyItemName, setHistoryItemName] = useState<string>("");
 
   useEffect(() => {
     fetchData();
@@ -81,6 +85,17 @@ export const InventoryView = () => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
   };
 
+  const handleViewHistory = async (item: InventoryItem) => {
+    try {
+      const res = await getInventoryItemHistory(item.id);
+      setHistoryItems(res.data);
+      setHistoryItemName(item.name);
+      setIsHistoryModalOpen(true);
+    } catch (err) {
+      setError("Failed to fetch history.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -146,10 +161,13 @@ export const InventoryView = () => {
                     <td className="px-6 py-4 text-sm text-gray-500">{item.reorderThreshold !== undefined ? item.reorderThreshold : '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{formatCurrency(item.costPerUnit)}</td>
                     <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
-                      <button onClick={() => { setEditingItem(item); setIsModalOpen(true); }} className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => handleViewHistory(item)} title="View History" className="text-gray-600 hover:text-gray-900">
+                        <History className="w-4 h-4"/>
+                      </button>
+                      <button onClick={() => { setEditingItem(item); setIsModalOpen(true); }} title="Edit" className="text-blue-600 hover:text-blue-900">
                         <Edit2 className="w-4 h-4"/>
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">
+                      <button onClick={() => handleDelete(item.id)} title="Delete" className="text-red-600 hover:text-red-900">
                         <Trash2 className="w-4 h-4"/>
                       </button>
                     </td>
@@ -221,6 +239,29 @@ export const InventoryView = () => {
             {isSubmitting ? "Saving..." : "Save Item"}
           </button>
         </form>
+      </Modal>
+
+      <Modal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} title={`History: ${historyItemName}`}>
+        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+          {historyItems.length === 0 ? (
+            <p className="text-sm text-gray-500 italic text-center py-4">No history records found.</p>
+          ) : (
+            <div className="relative border-l border-gray-200 ml-3 space-y-6">
+              {historyItems.map((record) => (
+                <div key={record.id} className="relative pl-6">
+                  <span className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-white"></span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <h4 className="text-sm font-semibold text-gray-900">
+                      {record.changeAmount > 0 ? '+' : ''}{record.changeAmount} ({record.reason})
+                    </h4>
+                    <time className="text-xs text-gray-500">{new Date(record.timestamp).toLocaleString()}</time>
+                  </div>
+                  {record.note && <p className="mt-1 text-sm text-gray-600">{record.note}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

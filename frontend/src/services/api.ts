@@ -78,6 +78,15 @@ export interface InventoryItem {
   lastUpdated?: string;
 }
 
+export interface StockMovement {
+  id: number;
+  inventoryItemId: number;
+  changeAmount: number;
+  reason: 'MANUAL_ADJUSTMENT' | 'ORDER_FULFILLMENT' | 'RESTOCK' | 'CORRECTION';
+  timestamp: string;
+  note?: string;
+}
+
 export interface ShiftOptimizationResponse {
   assignments: ShiftAssignment[];
   totalCost: number;
@@ -122,6 +131,7 @@ export const getLowStockInventory = () => api.get<InventoryItem[]>('/inventory/l
 export const createInventoryItem = (item: Partial<InventoryItem>) => api.post<InventoryItem>('/inventory', item);
 export const updateInventoryItem = (id: number, item: Partial<InventoryItem>) => api.put<InventoryItem>(`/inventory/${id}`, item);
 export const deleteInventoryItem = (id: number) => api.delete(`/inventory/${id}`);
+export const getInventoryItemHistory = (id: number) => api.get<StockMovement[]>(`/inventory/${id}/history`);
 
 export const resetDatabase = () => api.delete('/reset');
 
