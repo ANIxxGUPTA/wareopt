@@ -196,16 +196,23 @@ export const DeliverySlotView = () => {
       </div>
 
       {error && !isOrderModalOpen && !isSlotModalOpen && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-          <div className="text-red-700 text-sm font-medium">
-             {Array.isArray(error) ? (
-                <ul className="list-disc pl-4 space-y-1">
-                   {error.map((err, i) => <li key={i}>{err}</li>)}
-                </ul>
-             ) : (
-                <p>{error}</p>
-             )}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-5 mb-6 shadow-sm">
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3 shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-red-800 text-sm font-semibold mb-2">
+                Optimization could not be completed
+              </h3>
+              <div className="text-red-700 text-sm">
+                 {Array.isArray(error) ? (
+                    <ul className="list-disc pl-5 space-y-1.5 marker:text-red-400">
+                       {error.map((err, i) => <li key={i} className="leading-relaxed">{err}</li>)}
+                    </ul>
+                 ) : (
+                    <p>{error}</p>
+                 )}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -385,16 +392,23 @@ export const DeliverySlotView = () => {
       <Modal isOpen={isOrderModalOpen} onClose={() => { setIsOrderModalOpen(false); setError(null); }} title={editingOrder?.id ? "Edit Order" : "Add Order"}>
         <form onSubmit={handleSaveOrder} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-              <div className="text-red-700 text-sm font-medium">
-                 {Array.isArray(error) ? (
-                    <ul className="list-disc pl-4 space-y-1">
-                       {error.map((err, i) => <li key={i}>{err}</li>)}
-                    </ul>
-                 ) : (
-                    <p>{error}</p>
-                 )}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 shadow-sm">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3 shrink-0" />
+                <div className="flex-1">
+                  <h3 className="text-red-800 text-sm font-semibold mb-1">
+                    Please fix the following issues:
+                  </h3>
+                  <div className="text-red-700 text-sm">
+                     {Array.isArray(error) ? (
+                        <ul className="list-disc pl-5 space-y-1 marker:text-red-400">
+                           {error.map((err, i) => <li key={i} className="leading-relaxed">{err}</li>)}
+                        </ul>
+                     ) : (
+                        <p>{error}</p>
+                     )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -448,16 +462,23 @@ export const DeliverySlotView = () => {
       <Modal isOpen={isSlotModalOpen} onClose={() => { setIsSlotModalOpen(false); setError(null); }} title={editingSlot?.id ? "Edit Slot" : "Add Slot"}>
         <form onSubmit={handleSaveSlot} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-              <div className="text-red-700 text-sm font-medium">
-                 {Array.isArray(error) ? (
-                    <ul className="list-disc pl-4 space-y-1">
-                       {error.map((err, i) => <li key={i}>{err}</li>)}
-                    </ul>
-                 ) : (
-                    <p>{error}</p>
-                 )}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 shadow-sm">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3 shrink-0" />
+                <div className="flex-1">
+                  <h3 className="text-red-800 text-sm font-semibold mb-1">
+                    Please fix the following issues:
+                  </h3>
+                  <div className="text-red-700 text-sm">
+                     {Array.isArray(error) ? (
+                        <ul className="list-disc pl-5 space-y-1 marker:text-red-400">
+                           {error.map((err, i) => <li key={i} className="leading-relaxed">{err}</li>)}
+                        </ul>
+                     ) : (
+                        <p>{error}</p>
+                     )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
