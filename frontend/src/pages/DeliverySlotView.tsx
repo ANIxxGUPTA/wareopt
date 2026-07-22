@@ -75,11 +75,24 @@ export const DeliverySlotView = () => {
     e.preventDefault();
     setError(null);
     setIsSubmittingOrder(true);
+    
+    const payload: any = { ...editingOrder };
+    payload.destinationLat = Number(payload.destinationLat);
+    payload.destinationLng = Number(payload.destinationLng);
+    payload.weightKg = Number(payload.weightKg);
+    payload.priority = Number(payload.priority);
+
+    if (isNaN(payload.destinationLat) || isNaN(payload.destinationLng) || payload.destinationLat === 0 || payload.destinationLng === 0) {
+      setError("Destination Lat and Lng must be valid coordinates.");
+      setIsSubmittingOrder(false);
+      return;
+    }
+
     try {
       if (editingOrder?.id) {
-        await updateDeliveryOrder(editingOrder.id, editingOrder);
+        await updateDeliveryOrder(editingOrder.id, payload);
       } else {
-        await createDeliveryOrder(editingOrder!);
+        await createDeliveryOrder(payload);
       }
       setIsOrderModalOpen(false);
       fetchData();
@@ -362,11 +375,11 @@ export const DeliverySlotView = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination Lat</label>
-              <input required type="number" step="0.000001" value={editingOrder?.destinationLat || ''} onChange={e => setEditingOrder({...editingOrder, destinationLat: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 40.7100" />
+              <input required type="number" step="0.000001" value={editingOrder?.destinationLat ?? ''} onChange={e => setEditingOrder({...editingOrder, destinationLat: e.target.value as any})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 40.7100" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination Lng</label>
-              <input required type="number" step="0.000001" value={editingOrder?.destinationLng || ''} onChange={e => setEditingOrder({...editingOrder, destinationLng: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. -74.0100" />
+              <input required type="number" step="0.000001" value={editingOrder?.destinationLng ?? ''} onChange={e => setEditingOrder({...editingOrder, destinationLng: e.target.value as any})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. -74.0100" />
             </div>
             <p className="mt-1 text-xs text-gray-500 col-span-2 -mt-2">Use decimal coordinates within your delivery slots' service area</p>
           </div>
@@ -390,12 +403,12 @@ export const DeliverySlotView = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
-              <input required type="number" step="0.1" min="0.1" value={editingOrder?.weightKg || ''} onChange={e => setEditingOrder({...editingOrder, weightKg: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 15" />
+              <input required type="number" step="0.1" min="0.1" value={editingOrder?.weightKg ?? ''} onChange={e => setEditingOrder({...editingOrder, weightKg: e.target.value as any})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 15" />
               <p className="mt-1 text-xs text-gray-500">Total order weight in this slot's time window must not exceed slot capacity</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Priority</label>
-              <input required type="number" min="1" value={editingOrder?.priority || ''} onChange={e => setEditingOrder({...editingOrder, priority: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 1" />
+              <input required type="number" min="1" value={editingOrder?.priority ?? ''} onChange={e => setEditingOrder({...editingOrder, priority: e.target.value as any})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 1" />
               <p className="mt-1 text-xs text-gray-500">Lower number = higher priority</p>
             </div>
           </div>
