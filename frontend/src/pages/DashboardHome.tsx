@@ -1,22 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Users, Calendar, Truck, Box, RotateCcw, AlertCircle, Loader2, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
-import { getWorkers, getShifts, getDeliveryOrders, getDeliverySlots, resetDatabase, getLowStockInventory, getInventory } from '../services/api';
+import { Users, Calendar, Box, RotateCcw, AlertCircle, Loader2, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
+import { getWorkers, getShifts, resetDatabase, getLowStockInventory, getInventory } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 export const DashboardHome = () => {
-  const [counts, setCounts] = useState({ workers: 0, shifts: 0, orders: 0, slots: 0, lowStock: 0, inventoryItems: 0 });
+  const [counts, setCounts] = useState({ workers: 0, shifts: 0, lowStock: 0, inventoryItems: 0 });
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchCounts = () => {
-    Promise.all([getWorkers(), getShifts(), getDeliveryOrders(), getDeliverySlots(), getLowStockInventory(), getInventory()]).then(
-      ([resWorkers, resShifts, resOrders, resSlots, resLowStock, resInventory]) => {
+    Promise.all([getWorkers(), getShifts(), getLowStockInventory(), getInventory()]).then(
+      ([resWorkers, resShifts, resLowStock, resInventory]) => {
         setCounts({
           workers: resWorkers.data.length,
           shifts: resShifts.data.length,
-          orders: resOrders.data.length,
-          slots: resSlots.data.length,
           lowStock: resLowStock.data.length,
           inventoryItems: resInventory.data.length,
         });
@@ -32,7 +30,7 @@ export const DashboardHome = () => {
   }, []);
 
   const handleReset = async () => {
-    if (window.confirm("Are you sure you want to completely reset all data? This will wipe workers, shifts, orders, and slots permanently.")) {
+    if (window.confirm("Are you sure you want to completely reset all data? This will wipe workers, shifts, and assignments permanently.")) {
       setResetting(true);
       setError(null);
       try {
@@ -50,8 +48,6 @@ export const DashboardHome = () => {
   const stats = [
     { label: 'Total Workers', value: counts.workers, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
     { label: 'Total Shifts', value: counts.shifts, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-    { label: 'Delivery Orders', value: counts.orders, icon: Box, color: 'text-amber-600', bg: 'bg-amber-100' },
-    { label: 'Delivery Slots', value: counts.slots, icon: Truck, color: 'text-emerald-600', bg: 'bg-emerald-100' },
     { label: 'Low Stock Alerts', value: counts.lowStock, icon: AlertTriangle, color: counts.lowStock > 0 ? 'text-red-600' : 'text-gray-500', bg: counts.lowStock > 0 ? 'bg-red-100' : 'bg-gray-100' },
   ];
 
@@ -61,7 +57,7 @@ export const DashboardHome = () => {
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to WareOpt</h2>
         <p className="text-gray-600 max-w-3xl">
-          WareOpt is your all-in-one operations tool for managing warehouse logistics. Optimize your worker shift scheduling, handle delivery routing and slot assignments, and track your inventory seamlessly from this central hub.
+          WareOpt is your all-in-one operations tool for managing warehouse logistics. Optimize your worker shift scheduling and track your inventory seamlessly from this central hub.
         </p>
       </div>
 
@@ -110,20 +106,7 @@ export const DashboardHome = () => {
               </p>
             </div>
 
-            <div 
-              onClick={() => navigate('/deliveries')}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-md group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                  <Truck className="w-5 h-5" />
-                </div>
-                <h4 className="font-semibold text-gray-900">Delivery Slots</h4>
-              </div>
-              <p className="text-sm text-gray-600">
-                Set up delivery time windows and vehicle capacity, then optimize order-to-slot assignments based on deadlines and weight.
-              </p>
-            </div>
+
 
             <div 
               onClick={() => navigate('/inventory')}
@@ -136,7 +119,7 @@ export const DashboardHome = () => {
                 <h4 className="font-semibold text-gray-900">Inventory Management</h4>
               </div>
               <p className="text-sm text-gray-600">
-                Track stock levels, get low-stock alerts, and see a full audit history of every quantity change. Link your items directly to outgoing delivery orders.
+                Track stock levels, get low-stock alerts, and see a full audit history of every quantity change.
               </p>
             </div>
           </div>
@@ -177,12 +160,6 @@ export const DashboardHome = () => {
             >
               Manage Shift Optimization
             </button>
-            <button
-              onClick={() => navigate('/deliveries')}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 transition-colors shadow-sm"
-            >
-              Manage Delivery Routing
-            </button>
           </div>
         </div>
 
@@ -191,7 +168,7 @@ export const DashboardHome = () => {
             <AlertCircle className="w-5 h-5" /> Danger Zone
           </h3>
           <p className="text-sm text-red-700 mb-4">
-            Completely wipe all workers, shifts, delivery orders, slots, and assignments from the database to start fresh.
+            Completely wipe all workers, shifts, assignments, and inventory from the database to start fresh.
           </p>
           <button
             onClick={handleReset}

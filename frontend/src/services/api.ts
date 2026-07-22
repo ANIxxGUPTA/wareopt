@@ -31,38 +31,7 @@ export interface ShiftAssignment {
   assignedAt: string;
 }
 
-export interface DeliveryOrderItem {
-  id: number;
-  inventoryItem: InventoryItem;
-  quantity: number;
-}
 
-export interface DeliveryOrder {
-  id: number;
-  destinationLat: number;
-  destinationLng: number;
-  deadline: string;
-  weightKg: number;
-  priority: number;
-  status: 'PENDING' | 'FULFILLED';
-  items?: DeliveryOrderItem[];
-}
-
-export interface DeliverySlot {
-  id: number;
-  startTime: string;
-  endTime: string;
-  maxCapacityKg: number;
-  vehicleId: string;
-}
-
-export interface SlotAssignment {
-  id: number;
-  order: DeliveryOrder;
-  slot: DeliverySlot;
-  assignedAt: string;
-  estimatedDistanceKm: number;
-}
 
 export interface InventoryItem {
   id: number;
@@ -93,11 +62,7 @@ export interface ShiftOptimizationResponse {
   solveTimeMs: number;
 }
 
-export interface DeliveryOptimizationResponse {
-  assignments: SlotAssignment[];
-  totalDistanceKm: number;
-  solveTimeMs: number;
-}
+
 
 export const getShifts = () => api.get<Shift[]>('/shifts');
 export const createShift = (shift: Partial<Shift>) => api.post<Shift>('/shifts', shift);
@@ -111,20 +76,6 @@ export const deleteWorker = (id: number) => api.delete(`/workers/${id}`);
 
 export const getShiftAssignments = (shiftId: number) => api.get<ShiftAssignment[]>(`/shifts/${shiftId}/assignments`);
 export const optimizeShifts = () => api.post<ShiftOptimizationResponse>('/optimize/shifts');
-
-export const getDeliveryOrders = () => api.get<DeliveryOrder[]>('/delivery-orders');
-export const createDeliveryOrder = (order: Partial<DeliveryOrder>) => api.post<DeliveryOrder>('/delivery-orders', order);
-export const updateDeliveryOrder = (id: number, order: Partial<DeliveryOrder>) => api.put<DeliveryOrder>(`/delivery-orders/${id}`, order);
-export const deleteDeliveryOrder = (id: number) => api.delete(`/delivery-orders/${id}`);
-export const fulfillOrder = (id: number) => api.post<DeliveryOrder>(`/delivery-orders/${id}/fulfill`);
-
-export const getDeliverySlots = () => api.get<DeliverySlot[]>('/delivery-slots');
-export const createDeliverySlot = (slot: Partial<DeliverySlot>) => api.post<DeliverySlot>('/delivery-slots', slot);
-export const updateDeliverySlot = (id: number, slot: Partial<DeliverySlot>) => api.put<DeliverySlot>(`/delivery-slots/${id}`, slot);
-export const deleteDeliverySlot = (id: number) => api.delete(`/delivery-slots/${id}`);
-
-export const getSlotAssignments = (slotId: number) => api.get<SlotAssignment[]>(`/delivery-slots/${slotId}/assignments`);
-export const optimizeDelivery = () => api.post<DeliveryOptimizationResponse>('/optimize/delivery');
 
 export const getInventory = () => api.get<InventoryItem[]>('/inventory');
 export const getLowStockInventory = () => api.get<InventoryItem[]>('/inventory/low-stock');

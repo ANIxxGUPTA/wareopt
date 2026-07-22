@@ -48,8 +48,6 @@ public class GlobalExceptionHandler {
                 errorMsg = "Cannot delete worker: they have active shift assignments. Remove assignments or re-run optimization first.";
             } else if (lowerMsg.contains("\"shifts\"") || lowerMsg.contains("shift_id")) {
                 errorMsg = "Cannot delete shift: it has active worker assignments. Remove assignments or re-run optimization first.";
-            } else if (lowerMsg.contains("\"delivery_slots\"") || lowerMsg.contains("slot_id")) {
-                errorMsg = "Cannot delete delivery slot: it has active order assignments. Remove assignments or re-run optimization first.";
             } else {
                 errorMsg = "Cannot delete record: it has active assignments or references. Remove them first.";
             }

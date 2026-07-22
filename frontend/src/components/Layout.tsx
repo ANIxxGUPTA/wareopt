@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Truck, Box } from 'lucide-react';
+import { LayoutDashboard, Users, Box } from 'lucide-react';
 import clsx from 'clsx';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -10,7 +10,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     { name: 'Inventory', path: '/inventory', icon: Box },
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Shift Assignments', path: '/shifts', icon: Users },
-    { name: 'Delivery Slots', path: '/deliveries', icon: Truck },
   ];
 
   return (

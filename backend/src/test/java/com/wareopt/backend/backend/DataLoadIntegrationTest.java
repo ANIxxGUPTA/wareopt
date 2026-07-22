@@ -38,18 +38,13 @@ public class DataLoadIntegrationTest {
     @Autowired
     private ShiftRepository shiftRepository;
 
-    @Autowired
-    private DeliveryOrderRepository deliveryOrderRepository;
-
     @Test
     void testSeedDataLoadsAndCustomQueriesWork() {
         assertThat(workerRepository.count()).isEqualTo(20);
         assertThat(shiftRepository.count()).isEqualTo(14);
-        assertThat(deliveryOrderRepository.count()).isEqualTo(30);
 
         // Test custom queries
         assertThat(workerRepository.findBySkillsContaining("forklift")).isNotEmpty();
         assertThat(shiftRepository.findByDayOfWeek(1)).isNotEmpty();
-        assertThat(deliveryOrderRepository.findByDeadlineBefore(java.time.LocalDateTime.now().plusDays(10))).isNotEmpty();
     }
 }
