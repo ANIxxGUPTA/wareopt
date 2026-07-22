@@ -13,7 +13,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ShiftOptimizer {
@@ -24,6 +27,26 @@ public class ShiftOptimizer {
         Loader.loadNativeLibraries();
     }
 
+    private boolean hasRequiredSkills(Worker worker, Shift shift) {
+        if (shift.getRequiredSkill() == null || shift.getRequiredSkill().trim().isEmpty()) {
+            return true;
+        }
+        if (worker.getSkills() == null || worker.getSkills().isEmpty()) {
+            return false;
+        }
+        
+        Set<String> required = Arrays.stream(shift.getRequiredSkill().split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toSet());
+            
+        Set<String> workerSkills = worker.getSkills().stream()
+            .map(String::trim)
+            .collect(Collectors.toSet());
+            
+        return workerSkills.containsAll(required);
+    }
+
     public List<ShiftAssignment> optimize(List<Worker> workers, List<Shift> shifts) {
         if (shifts.isEmpty()) return new ArrayList<>();
 
@@ -31,7 +54,7 @@ public class ShiftOptimizer {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         for (Shift shift : shifts) {
             long eligibleWorkers = workers.stream()
-                .filter(w -> shift.getRequiredSkill() == null || (w.getSkills() != null && w.getSkills().contains(shift.getRequiredSkill())))
+                .filter(w -> hasRequiredSkills(w, shift))
                 .count();
                 
             if (eligibleWorkers == 0 && shift.getRequiredWorkerCount() > 0) {
@@ -49,7 +72,7 @@ public class ShiftOptimizer {
             
             final long shiftHours = hours;
             boolean anyCanWork = workers.stream()
-                .filter(w -> shift.getRequiredSkill() == null || (w.getSkills() != null && w.getSkills().contains(shift.getRequiredSkill())))
+                .filter(w -> hasRequiredSkills(w, shift))
                 .anyMatch(w -> w.getMaxHoursPerWeek() >= shiftHours);
                 
             if (!anyCanWork && eligibleWorkers > 0) {
@@ -72,7 +95,7 @@ public class ShiftOptimizer {
 
             for (int s = 0; s < shifts.size(); s++) {
                 Shift shift = shifts.get(s);
-                boolean eligible = shift.getRequiredSkill() == null || skills.contains(shift.getRequiredSkill());
+                boolean eligible = hasRequiredSkills(worker, shift);
                 if (eligible) {
                     x[w][s] = model.newBoolVar("x_w" + worker.getId() + "_s" + shift.getId());
                 } else {

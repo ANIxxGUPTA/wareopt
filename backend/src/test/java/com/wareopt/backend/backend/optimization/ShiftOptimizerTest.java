@@ -76,4 +76,40 @@ class ShiftOptimizerTest {
         List<ShiftAssignment> assignments = optimizer.optimize(new ArrayList<>(), new ArrayList<>());
         assertTrue(assignments.isEmpty());
     }
+
+    @Test
+    void testMultipleSkillsSubsetMatching() {
+        // Worker with both picking and packing
+        Worker w1 = new Worker();
+        w1.setId(1L);
+        w1.setHourlyCost(BigDecimal.valueOf(15));
+        w1.setMaxHoursPerWeek(40);
+        w1.setSkills(List.of("picking", "packing"));
+
+        // Worker with only picking
+        Worker w2 = new Worker();
+        w2.setId(2L);
+        w2.setHourlyCost(BigDecimal.valueOf(15));
+        w2.setMaxHoursPerWeek(40);
+        w2.setSkills(List.of("picking"));
+
+        // Shift requires BOTH picking and packing
+        Shift s1 = new Shift();
+        s1.setId(1L);
+        s1.setStartTime(LocalTime.of(8, 0));
+        s1.setEndTime(LocalTime.of(16, 0));
+        s1.setRequiredWorkerCount(1);
+        s1.setRequiredSkill("picking, packing");
+
+        // w1 should be feasible, w2 should fail
+        List<ShiftAssignment> assignments = optimizer.optimize(List.of(w1), List.of(s1));
+        assertFalse(assignments.isEmpty());
+        assertEquals(1, assignments.size());
+        assertEquals(1L, assignments.get(0).getWorker().getId());
+
+        // w2 lacks 'packing', should fail
+        assertThrows(InfeasibleSolutionException.class, () -> {
+            optimizer.optimize(List.of(w2), List.of(s1));
+        });
+    }
 }
