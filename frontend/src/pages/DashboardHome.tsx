@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 export const DashboardHome = () => {
   const [counts, setCounts] = useState({ workers: 0, shifts: 0, lowStock: 0, inventoryItems: 0 });
   const [resetting, setResetting] = useState(false);
+  const [showDangerZone, setShowDangerZone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -150,35 +151,45 @@ export const DashboardHome = () => {
       </div>
 
       {/* E. Quick Actions & Danger Zone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => navigate('/shifts')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              Manage Shift Optimization
-            </button>
+      <div className="grid grid-cols-1 gap-6 mt-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => navigate('/shifts')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                Manage Shift Optimization
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-8">
-          <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5" /> Danger Zone
-          </h3>
-          <p className="text-sm text-red-700 mb-4">
-            Completely wipe all workers, shifts, assignments, and inventory from the database to start fresh.
-          </p>
           <button
-            onClick={handleReset}
-            disabled={resetting}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+            onClick={() => setShowDangerZone(!showDangerZone)}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
           >
-            {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-            Reset All Data
+            {showDangerZone ? 'Hide advanced/admin options' : 'Show advanced/admin options'}
           </button>
         </div>
+
+        {showDangerZone && (
+          <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-8 mt-4">
+            <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" /> Danger Zone
+            </h3>
+            <p className="text-sm text-red-700 mb-4">
+              Completely wipe all workers, shifts, assignments, and inventory from the database to start fresh. This is used to delete all previously existing logs and data, and start entirely afresh.
+            </p>
+            <button
+              onClick={handleReset}
+              disabled={resetting}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+            >
+              {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+              Reset All Data
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
