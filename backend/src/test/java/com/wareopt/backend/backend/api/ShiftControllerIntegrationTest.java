@@ -70,8 +70,8 @@ class ShiftControllerIntegrationTest {
     void testCreateShiftInvalidTime() throws Exception {
         Shift shift = new Shift();
         shift.setDayOfWeek(1);
-        shift.setStartTime(LocalTime.of(16, 0));
-        shift.setEndTime(LocalTime.of(8, 0)); // End before start
+        shift.setStartTime(LocalTime.of(8, 0));
+        shift.setEndTime(LocalTime.of(1, 0)); // 17 hour shift
         shift.setRequiredWorkerCount(5);
         shift.setRequiredSkill("picking");
 
