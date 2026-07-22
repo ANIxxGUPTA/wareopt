@@ -6,8 +6,12 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.UniqueConstraint;
+
 @Entity
-@Table(name = "delivery_slots")
+@Table(name = "delivery_slots", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"day_of_week", "start_time", "end_time"})
+})
 public class DeliverySlot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

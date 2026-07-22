@@ -38,7 +38,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        ApiError error = new ApiError(HttpStatus.CONFLICT.value(), "Cannot delete or modify record because it is referenced by other data (e.g. active assignments).", null);
+        String msg = ex.getMessage();
+        String errorMsg = "Data integrity violation.";
+        if (msg != null && msg.toLowerCase().contains("duplicate key")) {
+            errorMsg = "A record with these unique values already exists.";
+        } else if (msg != null && msg.toLowerCase().contains("violates foreign key")) {
+            errorMsg = "Cannot delete or modify record because it is referenced by other data (e.g. active assignments).";
+        } else {
+            errorMsg = "Cannot delete or modify record because it is referenced by other data, or it violates a unique constraint.";
+        }
+        ApiError error = new ApiError(HttpStatus.CONFLICT.value(), errorMsg, null);
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 

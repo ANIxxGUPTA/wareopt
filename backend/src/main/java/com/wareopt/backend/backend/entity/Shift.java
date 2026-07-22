@@ -7,8 +7,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 
+import jakarta.persistence.UniqueConstraint;
+
 @Entity
-@Table(name = "shifts")
+@Table(name = "shifts", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"day_of_week", "start_time", "end_time", "required_skill"})
+})
 public class Shift {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

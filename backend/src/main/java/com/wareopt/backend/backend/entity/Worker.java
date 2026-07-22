@@ -9,8 +9,12 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.List;
 
+import jakarta.persistence.UniqueConstraint;
+
 @Entity
-@Table(name = "workers")
+@Table(name = "workers", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"name"})
+})
 public class Worker {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
