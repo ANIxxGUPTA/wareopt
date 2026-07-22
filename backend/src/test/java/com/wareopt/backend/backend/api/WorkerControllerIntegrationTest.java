@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ExtendWith(MockitoExtension.class)
 class WorkerControllerIntegrationTest {
@@ -73,5 +74,34 @@ class WorkerControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(worker)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testUpdateWorkerSplitsCommaSeparatedSkills() throws Exception {
+        Worker existingWorker = new Worker();
+        existingWorker.setId(1L);
+        existingWorker.setName("Priya");
+        existingWorker.setHourlyCost(BigDecimal.valueOf(200));
+        existingWorker.setMaxHoursPerWeek(30);
+        existingWorker.setSkills(java.util.List.of("picking"));
+
+        when(workerRepository.findById(1L)).thenReturn(Optional.of(existingWorker));
+
+        Worker updatePayload = new Worker();
+        updatePayload.setName("Priya");
+        updatePayload.setHourlyCost(BigDecimal.valueOf(200));
+        updatePayload.setMaxHoursPerWeek(30);
+        updatePayload.setSkills(java.util.List.of("picking, packing")); // Send as a single string
+
+        // Capture the saved worker
+        when(workerRepository.save(any(Worker.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        mockMvc.perform(put("/api/workers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.skills[0]").value("picking"))
+                .andExpect(jsonPath("$.skills[1]").value("packing"))
+                .andExpect(jsonPath("$.skills.length()").value(2));
     }
 }
