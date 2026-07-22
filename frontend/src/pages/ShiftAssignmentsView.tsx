@@ -127,7 +127,7 @@ export const ShiftAssignmentsView = () => {
       await deleteWorker(id);
       fetchData();
     } catch (err: any) {
-      setError("Failed to delete worker.");
+      setError(err.response?.data?.message || "Failed to delete worker.");
     }
   };
 
@@ -156,7 +156,7 @@ export const ShiftAssignmentsView = () => {
       await deleteShift(id);
       fetchData();
     } catch (err: any) {
-      setError("Failed to delete shift.");
+      setError(err.response?.data?.message || "Failed to delete shift.");
     }
   };
 

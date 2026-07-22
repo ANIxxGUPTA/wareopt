@@ -131,8 +131,8 @@ export const DeliverySlotView = () => {
     try {
       await deleteDeliveryOrder(id);
       fetchData();
-    } catch (err) {
-      setError("Failed to delete order.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to delete order.");
     }
   };
 
@@ -160,8 +160,8 @@ export const DeliverySlotView = () => {
     try {
       await deleteDeliverySlot(id);
       fetchData();
-    } catch (err) {
-      setError("Failed to delete slot.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to delete slot.");
     }
   };
 

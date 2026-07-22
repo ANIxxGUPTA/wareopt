@@ -65,7 +65,6 @@ public class WorkerController {
         if (!workerRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Worker not found");
         }
-        shiftAssignmentRepository.deleteByWorkerId(id);
         workerRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

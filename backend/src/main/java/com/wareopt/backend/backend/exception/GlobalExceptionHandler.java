@@ -42,8 +42,17 @@ public class GlobalExceptionHandler {
         String errorMsg = "Data integrity violation.";
         if (msg != null && msg.toLowerCase().contains("duplicate key")) {
             errorMsg = "A record with these unique values already exists.";
-        } else if (msg != null && msg.toLowerCase().contains("violates foreign key")) {
-            errorMsg = "Cannot delete or modify record because it is referenced by other data (e.g. active assignments).";
+        } else if (msg != null && msg.toLowerCase().contains("violates foreign key constraint")) {
+            String lowerMsg = msg.toLowerCase();
+            if (lowerMsg.contains("\"workers\"") || lowerMsg.contains("worker_id")) {
+                errorMsg = "Cannot delete worker: they have active shift assignments. Remove assignments or re-run optimization first.";
+            } else if (lowerMsg.contains("\"shifts\"") || lowerMsg.contains("shift_id")) {
+                errorMsg = "Cannot delete shift: it has active worker assignments. Remove assignments or re-run optimization first.";
+            } else if (lowerMsg.contains("\"delivery_slots\"") || lowerMsg.contains("slot_id")) {
+                errorMsg = "Cannot delete delivery slot: it has active order assignments. Remove assignments or re-run optimization first.";
+            } else {
+                errorMsg = "Cannot delete record: it has active assignments or references. Remove them first.";
+            }
         } else {
             errorMsg = "Cannot delete or modify record because it is referenced by other data, or it violates a unique constraint.";
         }
