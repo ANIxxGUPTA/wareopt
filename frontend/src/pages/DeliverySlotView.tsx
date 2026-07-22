@@ -362,12 +362,13 @@ export const DeliverySlotView = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination Lat</label>
-              <input required type="number" step="0.000001" value={editingOrder?.destinationLat || ''} onChange={e => setEditingOrder({...editingOrder, destinationLat: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+              <input required type="number" step="0.000001" value={editingOrder?.destinationLat || ''} onChange={e => setEditingOrder({...editingOrder, destinationLat: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 40.7100" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination Lng</label>
-              <input required type="number" step="0.000001" value={editingOrder?.destinationLng || ''} onChange={e => setEditingOrder({...editingOrder, destinationLng: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+              <input required type="number" step="0.000001" value={editingOrder?.destinationLng || ''} onChange={e => setEditingOrder({...editingOrder, destinationLng: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. -74.0100" />
             </div>
+            <p className="mt-1 text-xs text-gray-500 col-span-2 -mt-2">Use decimal coordinates within your delivery slots' service area</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Deadline</label>
@@ -383,16 +384,19 @@ export const DeliverySlotView = () => {
               placeholderText="Select deadline date and time"
               wrapperClassName="w-full"
             />
+            <p className="mt-1 text-xs text-gray-500">Must be on or after a delivery slot's end time for this order to be assignable</p>
             <p className="mt-1 text-xs text-gray-500">Click outside the calendar or press Enter to confirm your selection</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
-              <input required type="number" step="0.1" min="0.1" value={editingOrder?.weightKg || ''} onChange={e => setEditingOrder({...editingOrder, weightKg: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+              <input required type="number" step="0.1" min="0.1" value={editingOrder?.weightKg || ''} onChange={e => setEditingOrder({...editingOrder, weightKg: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 15" />
+              <p className="mt-1 text-xs text-gray-500">Total order weight in this slot's time window must not exceed slot capacity</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Priority</label>
-              <input required type="number" min="1" value={editingOrder?.priority || ''} onChange={e => setEditingOrder({...editingOrder, priority: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+              <input required type="number" min="1" value={editingOrder?.priority || ''} onChange={e => setEditingOrder({...editingOrder, priority: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 1" />
+              <p className="mt-1 text-xs text-gray-500">Lower number = higher priority</p>
             </div>
           </div>
           <button type="submit" disabled={isSubmittingOrder} className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-50">
@@ -412,7 +416,7 @@ export const DeliverySlotView = () => {
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Vehicle ID</label>
-            <input required type="text" value={editingSlot?.vehicleId || ''} onChange={e => setEditingSlot({...editingSlot, vehicleId: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+            <input required type="text" value={editingSlot?.vehicleId || ''} onChange={e => setEditingSlot({...editingSlot, vehicleId: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. V-101" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -445,10 +449,11 @@ export const DeliverySlotView = () => {
                 wrapperClassName="w-full"
               />
             </div>
+            <p className="mt-1 text-xs text-gray-500 col-span-2 -mt-2">Orders with a deadline before this slot's end time can be assigned here</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Max Capacity (kg)</label>
-            <input required type="number" step="0.1" min="0.1" value={editingSlot?.maxCapacityKg || ''} onChange={e => setEditingSlot({...editingSlot, maxCapacityKg: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+            <input required type="number" step="0.1" min="0.1" value={editingSlot?.maxCapacityKg || ''} onChange={e => setEditingSlot({...editingSlot, maxCapacityKg: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 100" />
           </div>
           <button type="submit" disabled={isSubmittingSlot} className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-50">
             {isSubmittingSlot ? "Saving..." : "Save Slot"}

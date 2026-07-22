@@ -345,21 +345,23 @@ export const ShiftAssignmentsView = () => {
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input required type="text" value={editingWorker?.name || ''} onChange={e => setEditingWorker({...editingWorker, name: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            <input required type="text" value={editingWorker?.name || ''} onChange={e => setEditingWorker({...editingWorker, name: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. Priya Sharma" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Hourly Cost (₹)</label>
-              <input required type="number" step="0.01" value={editingWorker?.hourlyCost || ''} onChange={e => setEditingWorker({...editingWorker, hourlyCost: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input required type="number" step="0.01" value={editingWorker?.hourlyCost || ''} onChange={e => setEditingWorker({...editingWorker, hourlyCost: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. 200" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Max Hours/Week</label>
-              <input required type="number" min="1" value={editingWorker?.maxHoursPerWeek || ''} onChange={e => setEditingWorker({...editingWorker, maxHoursPerWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input required type="number" min="1" value={editingWorker?.maxHoursPerWeek || ''} onChange={e => setEditingWorker({...editingWorker, maxHoursPerWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. 40" />
+              <p className="mt-1 text-xs text-gray-500">Must be enough to realistically cover assigned shifts</p>
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Skills (comma-separated)</label>
             <input required type="text" value={skillsInput} onChange={e => setSkillsInput(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking, packing" />
+            <p className="mt-1 text-xs text-gray-500">Must exactly match the skill name used in Manage Shifts (lowercase, comma-separated)</p>
           </div>
           <button type="submit" disabled={isSubmittingWorker} className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700 disabled:opacity-50">
             {isSubmittingWorker ? "Saving..." : "Save Worker"}
@@ -378,12 +380,13 @@ export const ShiftAssignmentsView = () => {
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Day of Week (1-7)</label>
-            <input required type="number" min="1" max="7" value={editingShift?.dayOfWeek || ''} onChange={e => setEditingShift({...editingShift, dayOfWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+            <input required type="number" min="1" max="7" value={editingShift?.dayOfWeek || ''} onChange={e => setEditingShift({...editingShift, dayOfWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="1-7 (1 = Monday)" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Start Time</label>
               <input required type="time" step="1" value={editingShift?.startTime || ''} onChange={e => setEditingShift({...editingShift, startTime: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <p className="mt-1 text-xs text-gray-500">End time must be later than start time on the same day</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">End Time</label>
@@ -399,11 +402,13 @@ export const ShiftAssignmentsView = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Required Workers</label>
-              <input required type="number" min="1" value={editingShift?.requiredWorkerCount || ''} onChange={e => setEditingShift({...editingShift, requiredWorkerCount: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input required type="number" min="1" value={editingShift?.requiredWorkerCount || ''} onChange={e => setEditingShift({...editingShift, requiredWorkerCount: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. 2" />
+              <p className="mt-1 text-xs text-gray-500">Must not exceed the number of workers who have this skill</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Required Skill</label>
               <input required type="text" value={editingShift?.requiredSkill || ''} onChange={e => setEditingShift({...editingShift, requiredSkill: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking" />
+              <p className="mt-1 text-xs text-gray-500">Must exactly match a skill entered for at least one worker</p>
             </div>
           </div>
           <button type="submit" disabled={isSubmittingShift} className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700 disabled:opacity-50">
