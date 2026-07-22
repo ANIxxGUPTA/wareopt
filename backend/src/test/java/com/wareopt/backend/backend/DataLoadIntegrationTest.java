@@ -13,8 +13,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Disabled;
+
 @SpringBootTest
 @Testcontainers
+@Disabled("Requires a Docker environment to run Testcontainers")
 @Sql(scripts = {"file:../db/001_schema.sql", "file:../db/999_seed.sql"})
 public class DataLoadIntegrationTest {
 
