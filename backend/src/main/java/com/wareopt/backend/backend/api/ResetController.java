@@ -16,7 +16,7 @@ public class ResetController {
 
     @DeleteMapping
     public ResponseEntity<Void> resetDatabase() {
-        String sql = "TRUNCATE TABLE workers, shifts, delivery_orders, delivery_slots, shift_assignments, slot_assignments RESTART IDENTITY CASCADE";
+        String sql = "TRUNCATE TABLE inventory_items, workers, shifts, delivery_orders, delivery_slots, shift_assignments, slot_assignments RESTART IDENTITY CASCADE";
         jdbcTemplate.execute(sql);
         return ResponseEntity.noContent().build();
     }

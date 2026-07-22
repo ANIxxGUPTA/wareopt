@@ -56,6 +56,20 @@ export interface SlotAssignment {
   estimatedDistanceKm: number;
 }
 
+export interface InventoryItem {
+  id: number;
+  sku: string;
+  name: string;
+  description?: string;
+  quantityOnHand: number;
+  unit?: string;
+  warehouseLocation?: string;
+  reorderThreshold?: number;
+  costPerUnit?: number;
+  createdAt?: string;
+  lastUpdated?: string;
+}
+
 export interface ShiftOptimizationResponse {
   assignments: ShiftAssignment[];
   totalCost: number;
@@ -93,6 +107,11 @@ export const deleteDeliverySlot = (id: number) => api.delete(`/delivery-slots/${
 
 export const getSlotAssignments = (slotId: number) => api.get<SlotAssignment[]>(`/delivery-slots/${slotId}/assignments`);
 export const optimizeDelivery = () => api.post<DeliveryOptimizationResponse>('/optimize/delivery');
+
+export const getInventory = () => api.get<InventoryItem[]>('/inventory');
+export const createInventoryItem = (item: Partial<InventoryItem>) => api.post<InventoryItem>('/inventory', item);
+export const updateInventoryItem = (id: number, item: Partial<InventoryItem>) => api.put<InventoryItem>(`/inventory/${id}`, item);
+export const deleteInventoryItem = (id: number) => api.delete(`/inventory/${id}`);
 
 export const resetDatabase = () => api.delete('/reset');
 
