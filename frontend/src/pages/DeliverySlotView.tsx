@@ -3,6 +3,7 @@ import { getDeliverySlots, getDeliveryOrders, optimizeDelivery, createDeliveryOr
 import type { DeliverySlot, SlotAssignment, DeliveryOrder } from '../services/api';
 import { AlertCircle, Loader2, Play, Plus, Edit2, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Modal } from '../components/Modal';
 import DatePicker from "react-datepicker";
@@ -12,6 +13,7 @@ import { format } from "date-fns";
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export const DeliverySlotView = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'optimize' | 'orders' | 'slots'>('optimize');
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
