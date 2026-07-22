@@ -37,7 +37,7 @@ class DeliverySlotOptimizerTest {
         s1.setStartTime(LocalDateTime.now());
         s1.setEndTime(LocalDateTime.now().plusHours(4));
 
-        List<SlotAssignment> assignments = optimizer.optimize(List.of(o1), List.of(s1));
+        List<SlotAssignment> assignments = optimizer.optimize(List.of(o1), List.of(s1), java.util.Collections.emptyMap());
         assertFalse(assignments.isEmpty());
         assertEquals(1, assignments.size());
         assertEquals(1L, assignments.get(0).getOrder().getId());
@@ -60,7 +60,7 @@ class DeliverySlotOptimizerTest {
         s1.setEndTime(LocalDateTime.now().plusHours(4));
 
         assertThrows(InfeasibleSolutionException.class, () -> {
-            optimizer.optimize(List.of(o1), List.of(s1));
+            optimizer.optimize(List.of(o1), List.of(s1), java.util.Collections.emptyMap());
         });
     }
 
@@ -81,13 +81,13 @@ class DeliverySlotOptimizerTest {
         s1.setEndTime(LocalDateTime.now().plusHours(4));
 
         assertThrows(InfeasibleSolutionException.class, () -> {
-            optimizer.optimize(List.of(o1), List.of(s1));
+            optimizer.optimize(List.of(o1), List.of(s1), java.util.Collections.emptyMap());
         });
     }
 
     @Test
     void testEdgeCaseZeroOrders() {
-        List<SlotAssignment> assignments = optimizer.optimize(new ArrayList<>(), new ArrayList<>());
+        List<SlotAssignment> assignments = optimizer.optimize(new ArrayList<>(), new ArrayList<>(), java.util.Collections.emptyMap());
         assertTrue(assignments.isEmpty());
     }
 }

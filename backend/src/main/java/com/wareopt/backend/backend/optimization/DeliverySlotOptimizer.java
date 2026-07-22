@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class DeliverySlotOptimizer {
@@ -26,16 +27,20 @@ public class DeliverySlotOptimizer {
         Loader.loadNativeLibraries();
     }
 
-    public List<SlotAssignment> optimize(List<DeliveryOrder> orders, List<DeliverySlot> slots) {
+    public List<SlotAssignment> optimize(List<DeliveryOrder> orders, List<DeliverySlot> slots, Map<Long, Long> fulfilledWeightBySlot) {
         if (orders.isEmpty()) return new ArrayList<>();
 
         List<String> validationErrors = new ArrayList<>();
         
-        long totalCapacity = slots.stream().mapToLong(s -> (long)(s.getMaxCapacityKg().doubleValue() * 1000)).sum();
+        long totalCapacity = slots.stream().mapToLong(s -> {
+            long maxCap = (long)(s.getMaxCapacityKg().doubleValue() * 1000);
+            long consumed = fulfilledWeightBySlot.getOrDefault(s.getId(), 0L);
+            return Math.max(0L, maxCap - consumed);
+        }).sum();
         long totalWeight = orders.stream().mapToLong(o -> (long)(o.getWeightKg().doubleValue() * 1000)).sum();
         
         if (totalWeight > totalCapacity) {
-            validationErrors.add(String.format("Total weight of all orders (%.1f kg) exceeds the total capacity of all available slots (%.1f kg).", 
+            validationErrors.add(String.format("Total weight of pending orders (%.1f kg) exceeds the remaining capacity of all available slots (%.1f kg).", 
                 totalWeight / 1000.0, totalCapacity / 1000.0));
         }
 
@@ -52,10 +57,14 @@ public class DeliverySlotOptimizer {
                 long orderWeight = (long)(order.getWeightKg().doubleValue() * 1000);
                 boolean fitsInAnyEligible = slots.stream()
                     .filter(s -> !s.getEndTime().isAfter(order.getDeadline()))
-                    .anyMatch(s -> (long)(s.getMaxCapacityKg().doubleValue() * 1000) >= orderWeight);
+                    .anyMatch(s -> {
+                        long maxCap = (long)(s.getMaxCapacityKg().doubleValue() * 1000);
+                        long consumed = fulfilledWeightBySlot.getOrDefault(s.getId(), 0L);
+                        return (maxCap - consumed) >= orderWeight;
+                    });
                     
                 if (!fitsInAnyEligible) {
-                    validationErrors.add(String.format("Order #%d (%.4f, %.4f): Weight (%.1f kg) exceeds the maximum capacity of all eligible slots.",
+                    validationErrors.add(String.format("Order #%d (%.4f, %.4f): Weight (%.1f kg) exceeds the remaining capacity of all eligible slots.",
                         order.getId(), order.getDestinationLat(), order.getDestinationLng(), order.getWeightKg()));
                 }
             }
@@ -113,7 +122,8 @@ public class DeliverySlotOptimizer {
                 long[] actualWeights = new long[count];
                 System.arraycopy(weights, 0, actualWeights, 0, count);
                 long maxCap = (long) (slot.getMaxCapacityKg().doubleValue() * 1000);
-                model.addLessOrEqual(LinearExpr.weightedSum(slotVars.toArray(new IntVar[0]), actualWeights), maxCap);
+                long consumed = fulfilledWeightBySlot.getOrDefault(slot.getId(), 0L);
+                model.addLessOrEqual(LinearExpr.weightedSum(slotVars.toArray(new IntVar[0]), actualWeights), Math.max(0L, maxCap - consumed));
             }
         }
 

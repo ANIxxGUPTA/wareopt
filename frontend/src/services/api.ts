@@ -31,6 +31,12 @@ export interface ShiftAssignment {
   assignedAt: string;
 }
 
+export interface DeliveryOrderItem {
+  id: number;
+  inventoryItem: InventoryItem;
+  quantity: number;
+}
+
 export interface DeliveryOrder {
   id: number;
   destinationLat: number;
@@ -38,6 +44,8 @@ export interface DeliveryOrder {
   deadline: string;
   weightKg: number;
   priority: number;
+  status: 'PENDING' | 'FULFILLED';
+  items?: DeliveryOrderItem[];
 }
 
 export interface DeliverySlot {
@@ -99,6 +107,7 @@ export const getDeliveryOrders = () => api.get<DeliveryOrder[]>('/delivery-order
 export const createDeliveryOrder = (order: Partial<DeliveryOrder>) => api.post<DeliveryOrder>('/delivery-orders', order);
 export const updateDeliveryOrder = (id: number, order: Partial<DeliveryOrder>) => api.put<DeliveryOrder>(`/delivery-orders/${id}`, order);
 export const deleteDeliveryOrder = (id: number) => api.delete(`/delivery-orders/${id}`);
+export const fulfillOrder = (id: number) => api.post<DeliveryOrder>(`/delivery-orders/${id}/fulfill`);
 
 export const getDeliverySlots = () => api.get<DeliverySlot[]>('/delivery-slots');
 export const createDeliverySlot = (slot: Partial<DeliverySlot>) => api.post<DeliverySlot>('/delivery-slots', slot);

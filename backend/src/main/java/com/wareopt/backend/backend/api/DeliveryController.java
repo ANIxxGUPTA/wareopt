@@ -2,6 +2,7 @@ package com.wareopt.backend.backend.api;
 
 import com.wareopt.backend.backend.api.dto.DeliveryOptimizationResponse;
 import com.wareopt.backend.backend.entity.DeliveryOrder;
+import com.wareopt.backend.backend.entity.OrderStatus;
 import com.wareopt.backend.backend.entity.DeliverySlot;
 import com.wareopt.backend.backend.entity.SlotAssignment;
 import com.wareopt.backend.backend.optimization.DeliverySlotOptimizer;
@@ -18,6 +19,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.wareopt.backend.backend.entity.DeliveryOrderItem;
+import com.wareopt.backend.backend.repository.InventoryItemRepository;
 
 @RestController
 @RequestMapping("/api")
@@ -35,6 +38,12 @@ public class DeliveryController {
     @Autowired
     private DeliverySlotOptimizer deliverySlotOptimizer;
 
+    @Autowired
+    private DeliveryService deliveryService;
+
+    @Autowired
+    private InventoryItemRepository InventoryItemRepository;
+
     // ----- ORDERS -----
 
     @GetMapping("/delivery-orders")
@@ -45,6 +54,15 @@ public class DeliveryController {
     @PostMapping("/delivery-orders")
     public ResponseEntity<DeliveryOrder> createOrder(@Valid @RequestBody DeliveryOrder order) {
         order.setId(null);
+        if (order.getItems() != null) {
+            for (DeliveryOrderItem item : order.getItems()) {
+                item.setOrder(order);
+                if (item.getInventoryItem() != null && item.getInventoryItem().getId() != null) {
+                    item.setInventoryItem(InventoryItemRepository.findById(item.getInventoryItem().getId())
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory item not found")));
+                }
+            }
+        }
         DeliveryOrder savedOrder = deliveryOrderRepository.save(order);
         return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
     }
@@ -60,6 +78,18 @@ public class DeliveryController {
         order.setWeightKg(orderDetails.getWeightKg());
         order.setPriority(orderDetails.getPriority());
 
+        if (orderDetails.getItems() != null) {
+            for (DeliveryOrderItem item : orderDetails.getItems()) {
+                item.setOrder(order);
+                if (item.getInventoryItem() != null && item.getInventoryItem().getId() != null) {
+                    item.setInventoryItem(InventoryItemRepository.findById(item.getInventoryItem().getId())
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory item not found")));
+                }
+            }
+            order.getItems().clear();
+            order.getItems().addAll(orderDetails.getItems());
+        }
+
         DeliveryOrder updatedOrder = deliveryOrderRepository.save(order);
         return ResponseEntity.ok(updatedOrder);
     }
@@ -72,6 +102,18 @@ public class DeliveryController {
         slotAssignmentRepository.deleteByOrderId(id);
         deliveryOrderRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ----- FULFILLMENT -----
+    
+    @PostMapping("/delivery-orders/{id}/fulfill")
+    public ResponseEntity<DeliveryOrder> fulfillOrder(@PathVariable Long id) {
+        try {
+            DeliveryOrder fulfilledOrder = deliveryService.fulfillOrder(id);
+            return ResponseEntity.ok(fulfilledOrder);
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Order was modified concurrently. Please try again.");
+        }
     }
 
     // ----- SLOTS -----
@@ -130,14 +172,28 @@ public class DeliveryController {
 
     @PostMapping("/optimize/delivery")
     public DeliveryOptimizationResponse optimizeDelivery() {
-        List<DeliveryOrder> orders = deliveryOrderRepository.findAll();
+        List<DeliveryOrder> allOrders = deliveryOrderRepository.findAll();
+        List<DeliveryOrder> pendingOrders = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.PENDING)
+                .collect(Collectors.toList());
+
         List<DeliverySlot> slots = deliverySlotRepository.findAll();
 
+        List<SlotAssignment> fulfilledAssignments = slotAssignmentRepository.findAll().stream()
+                .filter(a -> a.getOrder().getStatus() == OrderStatus.FULFILLED)
+                .collect(Collectors.toList());
+
+        java.util.Map<Long, Long> fulfilledWeightBySlot = new java.util.HashMap<>();
+        for (SlotAssignment a : fulfilledAssignments) {
+            fulfilledWeightBySlot.merge(a.getSlot().getId(), 
+                (long)(a.getOrder().getWeightKg().doubleValue() * 1000), Long::sum);
+        }
+
         long startTime = System.currentTimeMillis();
-        List<SlotAssignment> assignments = deliverySlotOptimizer.optimize(orders, slots);
+        List<SlotAssignment> assignments = deliverySlotOptimizer.optimize(pendingOrders, slots, fulfilledWeightBySlot);
         long solveTime = System.currentTimeMillis() - startTime;
 
-        slotAssignmentRepository.deleteAll();
+        slotAssignmentRepository.deleteByOrderStatus(OrderStatus.PENDING);
         slotAssignmentRepository.saveAll(assignments);
 
         BigDecimal totalDistance = BigDecimal.ZERO;

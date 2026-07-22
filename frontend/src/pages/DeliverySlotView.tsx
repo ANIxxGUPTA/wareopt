@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { getDeliverySlots, getDeliveryOrders, optimizeDelivery, createDeliveryOrder, updateDeliveryOrder, deleteDeliveryOrder, createDeliverySlot, updateDeliverySlot, deleteDeliverySlot } from '../services/api';
-import type { DeliverySlot, SlotAssignment, DeliveryOrder } from '../services/api';
-import { AlertCircle, Loader2, Play, Plus, Edit2, Trash2 } from 'lucide-react';
+import { getDeliverySlots, getDeliveryOrders, optimizeDelivery, createDeliveryOrder, updateDeliveryOrder, deleteDeliveryOrder, createDeliverySlot, updateDeliverySlot, deleteDeliverySlot, getInventory, fulfillOrder } from '../services/api';
+import type { DeliverySlot, SlotAssignment, DeliveryOrder, InventoryItem } from '../services/api';
+import { AlertCircle, Loader2, Play, Plus, Edit2, Trash2, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -17,6 +17,7 @@ export const DeliverySlotView = () => {
   const [activeTab, setActiveTab] = useState<'optimize' | 'orders' | 'slots'>('optimize');
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [assignments, setAssignments] = useState<SlotAssignment[]>([]);
   
   const [loading, setLoading] = useState(false);
@@ -41,9 +42,10 @@ export const DeliverySlotView = () => {
 
   const fetchData = async () => {
     try {
-      const [slotRes, orderRes] = await Promise.all([getDeliverySlots(), getDeliveryOrders()]);
+      const [slotRes, orderRes, invRes] = await Promise.all([getDeliverySlots(), getDeliveryOrders(), getInventory()]);
       setSlots(slotRes.data);
       setOrders(orderRes.data);
+      setInventory(invRes.data);
 
       const state = (location as any).state as { tab?: string } | undefined;
       if (slotRes.data.length === 0 && orderRes.data.length === 0 && !state?.tab) {
@@ -111,6 +113,16 @@ export const DeliverySlotView = () => {
       setError(err.response?.data?.message || "Failed to save order.");
     } finally {
       setIsSubmittingOrder(false);
+    }
+  };
+
+  const handleFulfillOrder = async (id: number) => {
+    if (!window.confirm("Fulfill this order? This will deduct inventory stock and cannot be undone.")) return;
+    try {
+      await fulfillOrder(id);
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to fulfill order.");
     }
   };
 
@@ -231,6 +243,8 @@ export const DeliverySlotView = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deadline</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Weight (kg)</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
@@ -241,7 +255,20 @@ export const DeliverySlotView = () => {
                     <td className="px-6 py-4 text-sm text-gray-500">{new Date(o.deadline).toLocaleString()}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{o.weightKg}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{o.priority}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {o.items && o.items.length > 0 ? o.items.map(i => `${i.quantity}x ${i.inventoryItem?.name}`).join(', ') : 'None'}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {o.status === 'FULFILLED' ? (
+                        <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full text-xs">FULFILLED</span>
+                      ) : (
+                        <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-full text-xs">PENDING</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
+                      {o.status === 'PENDING' && (
+                        <button onClick={() => handleFulfillOrder(o.id)} title="Fulfill Order" className="text-blue-600 hover:text-blue-900 mr-2"><CheckCircle className="w-4 h-4"/></button>
+                      )}
                       <button onClick={() => { setEditingOrder(o); setIsOrderModalOpen(true); }} className="text-emerald-600 hover:text-emerald-900"><Edit2 className="w-4 h-4"/></button>
                       <button onClick={() => handleDeleteOrder(o.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
                     </td>
@@ -451,6 +478,71 @@ export const DeliverySlotView = () => {
               <label className="block text-sm font-medium text-gray-700">Priority</label>
               <input required type="number" min="1" value={editingOrder?.priority ?? ''} onChange={e => setEditingOrder({...editingOrder, priority: e.target.value as any})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" placeholder="e.g. 1" />
               <p className="mt-1 text-xs text-gray-500">Lower number = higher priority</p>
+            </div>
+          </div>
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">Line Items</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentItems = editingOrder?.items || [];
+                  setEditingOrder({
+                    ...editingOrder,
+                    items: [...currentItems, { inventoryItem: { id: 0 } as any, quantity: 1 } as any]
+                  });
+                }}
+                className="text-emerald-600 text-xs font-medium hover:text-emerald-700 flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Add Item
+              </button>
+            </div>
+            {(!editingOrder?.items || editingOrder.items.length === 0) && (
+              <p className="text-xs text-gray-500 italic">No line items added yet.</p>
+            )}
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+              {editingOrder?.items?.map((item, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <select
+                    required
+                    value={item.inventoryItem?.id || ''}
+                    onChange={(e) => {
+                      const newItems = [...(editingOrder.items || [])];
+                      newItems[idx] = { ...newItems[idx], inventoryItem: { id: Number(e.target.value) } as any };
+                      setEditingOrder({ ...editingOrder, items: newItems });
+                    }}
+                    className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500 text-sm"
+                  >
+                    <option value="" disabled>Select Item...</option>
+                    {inventory.map(inv => (
+                      <option key={inv.id} value={inv.id}>{inv.name} (Stock: {inv.quantityOnHand})</option>
+                    ))}
+                  </select>
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    placeholder="Qty"
+                    value={item.quantity || ''}
+                    onChange={(e) => {
+                      const newItems = [...(editingOrder.items || [])];
+                      newItems[idx] = { ...newItems[idx], quantity: Number(e.target.value) };
+                      setEditingOrder({ ...editingOrder, items: newItems });
+                    }}
+                    className="w-20 rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newItems = editingOrder.items!.filter((_, i) => i !== idx);
+                      setEditingOrder({ ...editingOrder, items: newItems });
+                    }}
+                    className="text-red-500 hover:text-red-700 p-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
           <button type="submit" disabled={isSubmittingOrder} className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-50">
