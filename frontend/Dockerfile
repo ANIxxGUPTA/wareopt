@@ -8,7 +8,7 @@ COPY . .
 # We'll bake in a default that matches the compose network configuration.
 # The user's browser needs to be able to hit the backend.
 # If the user runs this locally, localhost:8080 is the accessible route from their browser to the backend container.
-ARG VITE_API_URL=http://localhost:8080/api
+ARG VITE_API_URL=https://wareopt-backend.onrender.com/api
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
