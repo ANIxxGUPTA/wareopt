@@ -26,6 +26,10 @@ export const ShiftAssignmentsView = () => {
   const [skillsInput, setSkillsInput] = useState("");
   const [editingShift, setEditingShift] = useState<Partial<Shift> | null>(null);
 
+  const formatINR = (value: number) => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -182,7 +186,7 @@ export const ShiftAssignmentsView = () => {
                 {workers.map(w => (
                   <tr key={w.id}>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{w.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">${w.hourlyCost}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{formatINR(w.hourlyCost)}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{w.maxHoursPerWeek}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{w.skills?.join(', ')}</td>
                     <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
@@ -246,8 +250,8 @@ export const ShiftAssignmentsView = () => {
           {resultStats && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 flex gap-8">
               <div>
-                <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Total Labor Cost</p>
-                <p className="text-2xl font-bold text-emerald-600">${resultStats.cost.toFixed(2)}</p>
+                <p className="text-sm font-medium text-gray-500">TOTAL LABOR COST</p>
+                <p className="text-2xl font-bold text-emerald-600">{formatINR(resultStats.cost)}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Solve Time</p>
@@ -284,8 +288,8 @@ export const ShiftAssignmentsView = () => {
                         {assigned.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
                             {assigned.map(a => (
-                              <span key={a.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {a.worker.name} (${a.worker.hourlyCost}/hr)
+                              <span key={a.id} className="text-gray-900 font-medium">
+                                {a.worker.name} ({formatINR(a.worker.hourlyCost)}/hr)
                               </span>
                             ))}
                           </div>
@@ -311,8 +315,8 @@ export const ShiftAssignmentsView = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Hourly Cost ($)</label>
-              <input required type="number" min="0.01" step="0.01" value={editingWorker?.hourlyCost || ''} onChange={e => setEditingWorker({...editingWorker, hourlyCost: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <label className="block text-sm font-medium text-gray-700">Hourly Cost (₹)</label>
+              <input required type="number" step="0.01" value={editingWorker?.hourlyCost || ''} onChange={e => setEditingWorker({...editingWorker, hourlyCost: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Max Hours/Week</label>
