@@ -20,4 +20,12 @@ public class ResetController {
         jdbcTemplate.execute(sql);
         return ResponseEntity.noContent().build();
     }
+
+    @org.springframework.web.bind.annotation.PostMapping("/constraints")
+    public ResponseEntity<String> addConstraints() {
+        try { jdbcTemplate.execute("ALTER TABLE workers ADD CONSTRAINT unique_worker_name UNIQUE (name);"); } catch (Exception e) {}
+        try { jdbcTemplate.execute("ALTER TABLE shifts ADD CONSTRAINT unique_shift UNIQUE (day_of_week, start_time, end_time, required_skill);"); } catch (Exception e) {}
+        try { jdbcTemplate.execute("ALTER TABLE delivery_slots ADD CONSTRAINT unique_slot UNIQUE (start_time, end_time);"); } catch (Exception e) {}
+        return ResponseEntity.ok("Constraints check complete.");
+    }
 }

@@ -24,6 +24,26 @@ async function testUniqueConstraints() {
         console.log(`FAILED: Expected 409 Conflict for duplicate worker, got ${res.status}. Message: ${await res.text()}`);
     }
     
+    // 2. Shift Unique Constraint
+    console.log('Testing Shift Unique Constraint...');
+    await fetch(`${API_URL}/shifts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dayOfWeek: 3, startTime: '09:00', endTime: '17:00', requiredWorkerCount: 1, requiredSkill: 'TEST' })
+    });
+    
+    res = await fetch(`${API_URL}/shifts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dayOfWeek: 3, startTime: '09:00', endTime: '17:00', requiredWorkerCount: 2, requiredSkill: 'TEST' })
+    });
+    
+    if (res.status === 409) {
+        console.log('SUCCESS: Shift duplicate rejected with 409 Conflict.');
+    } else {
+        console.log(`FAILED: Expected 409 Conflict for duplicate shift, got ${res.status}. Message: ${await res.text()}`);
+    }
+    
     // 2. DeliverySlot Unique Constraint
     console.log('Testing DeliverySlot Unique Constraint...');
     await fetch(`${API_URL}/delivery-slots`, {
