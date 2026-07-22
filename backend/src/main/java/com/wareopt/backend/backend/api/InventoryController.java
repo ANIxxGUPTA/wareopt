@@ -26,7 +26,7 @@ public class InventoryController {
         return inventoryService.getLowStockItems();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<InventoryItem> getInventoryItemById(@PathVariable Long id) {
         return ResponseEntity.ok(inventoryService.getInventoryItemById(id));
     }
@@ -37,13 +37,13 @@ public class InventoryController {
         return new ResponseEntity<>(savedItem, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public ResponseEntity<InventoryItem> updateInventoryItem(@PathVariable Long id, @Valid @RequestBody InventoryItem itemDetails) {
         InventoryItem updatedItem = inventoryService.updateInventoryItem(id, itemDetails);
         return ResponseEntity.ok(updatedItem);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deleteInventoryItem(@PathVariable Long id) {
         inventoryService.deleteInventoryItem(id);
         return ResponseEntity.noContent().build();
