@@ -47,6 +47,11 @@ public class ShiftController {
         if (shift.getEndTime().equals(shift.getStartTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be the same as start time");
         }
+        long hours = Duration.between(shift.getStartTime(), shift.getEndTime()).toHours();
+        if (hours < 0) hours += 24;
+        if (hours > 16) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shift duration cannot exceed 16 hours");
+        }
         shift.setId(null);
         Shift savedShift = shiftRepository.save(shift);
         return new ResponseEntity<>(savedShift, HttpStatus.CREATED);
@@ -59,6 +64,11 @@ public class ShiftController {
 
         if (shiftDetails.getEndTime().equals(shiftDetails.getStartTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be the same as start time");
+        }
+        long hours = Duration.between(shiftDetails.getStartTime(), shiftDetails.getEndTime()).toHours();
+        if (hours < 0) hours += 24;
+        if (hours > 16) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shift duration cannot exceed 16 hours");
         }
 
         shift.setDayOfWeek(shiftDetails.getDayOfWeek());
