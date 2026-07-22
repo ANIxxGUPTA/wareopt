@@ -37,6 +37,10 @@ export const ShiftAssignmentsView = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (error && (isWorkerModalOpen || isShiftModalOpen)) setError(null);
+  }, [editingWorker, editingShift, skillsInput]);
+
   const fetchData = async () => {
     try {
       const [shiftRes, workerRes] = await Promise.all([getShifts(), getWorkers()]);
@@ -167,7 +171,7 @@ export const ShiftAssignmentsView = () => {
         </button>
       </div>
 
-      {error && (
+      {error && !isWorkerModalOpen && !isShiftModalOpen && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
           <p className="text-red-700 text-sm font-medium">{error}</p>
@@ -315,8 +319,14 @@ export const ShiftAssignmentsView = () => {
       )}
 
       {/* Worker Modal */}
-      <Modal isOpen={isWorkerModalOpen} onClose={() => setIsWorkerModalOpen(false)} title={editingWorker?.id ? "Edit Worker" : "Add Worker"}>
+      <Modal isOpen={isWorkerModalOpen} onClose={() => { setIsWorkerModalOpen(false); setError(null); }} title={editingWorker?.id ? "Edit Worker" : "Add Worker"}>
         <form onSubmit={handleSaveWorker} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Name</label>
             <input required type="text" value={editingWorker?.name || ''} onChange={e => setEditingWorker({...editingWorker, name: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
@@ -342,8 +352,14 @@ export const ShiftAssignmentsView = () => {
       </Modal>
 
       {/* Shift Modal */}
-      <Modal isOpen={isShiftModalOpen} onClose={() => setIsShiftModalOpen(false)} title={editingShift?.id ? "Edit Shift" : "Add Shift"}>
+      <Modal isOpen={isShiftModalOpen} onClose={() => { setIsShiftModalOpen(false); setError(null); }} title={editingShift?.id ? "Edit Shift" : "Add Shift"}>
         <form onSubmit={handleSaveShift} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Day of Week (1-7)</label>
             <input required type="number" min="1" max="7" value={editingShift?.dayOfWeek || ''} onChange={e => setEditingShift({...editingShift, dayOfWeek: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />

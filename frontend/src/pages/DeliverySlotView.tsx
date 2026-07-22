@@ -30,6 +30,10 @@ export const DeliverySlotView = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (error && (isOrderModalOpen || isSlotModalOpen)) setError(null);
+  }, [editingOrder, editingSlot]);
+
   const fetchData = async () => {
     try {
       const [slotRes, orderRes] = await Promise.all([getDeliverySlots(), getDeliveryOrders()]);
@@ -165,7 +169,7 @@ export const DeliverySlotView = () => {
         </button>
       </div>
 
-      {error && (
+      {error && !isOrderModalOpen && !isSlotModalOpen && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
           <p className="text-red-700 text-sm font-medium">{error}</p>
@@ -344,8 +348,14 @@ export const DeliverySlotView = () => {
       )}
 
       {/* Order Modal */}
-      <Modal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)} title={editingOrder?.id ? "Edit Order" : "Add Order"}>
+      <Modal isOpen={isOrderModalOpen} onClose={() => { setIsOrderModalOpen(false); setError(null); }} title={editingOrder?.id ? "Edit Order" : "Add Order"}>
         <form onSubmit={handleSaveOrder} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Destination Lat</label>
@@ -377,8 +387,14 @@ export const DeliverySlotView = () => {
       </Modal>
 
       {/* Slot Modal */}
-      <Modal isOpen={isSlotModalOpen} onClose={() => setIsSlotModalOpen(false)} title={editingSlot?.id ? "Edit Slot" : "Add Slot"}>
+      <Modal isOpen={isSlotModalOpen} onClose={() => { setIsSlotModalOpen(false); setError(null); }} title={editingSlot?.id ? "Edit Slot" : "Add Slot"}>
         <form onSubmit={handleSaveSlot} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Vehicle ID</label>
             <input required type="text" value={editingSlot?.vehicleId || ''} onChange={e => setEditingSlot({...editingSlot, vehicleId: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
