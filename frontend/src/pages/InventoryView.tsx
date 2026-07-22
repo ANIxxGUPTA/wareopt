@@ -206,17 +206,17 @@ export const InventoryView = () => {
           
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea value={editingItem?.description || ''} onChange={e => setEditingItem({...editingItem, description: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" rows={2} />
+            <textarea value={editingItem?.description || ''} onChange={e => setEditingItem({...editingItem, description: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" rows={2} placeholder="Brief description of item..." />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Quantity On Hand</label>
-              <input required type="number" min="0" value={editingItem?.quantityOnHand ?? ''} onChange={e => setEditingItem({...editingItem, quantityOnHand: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input required type="number" min="0" value={editingItem?.quantityOnHand ?? ''} onChange={e => setEditingItem({...editingItem, quantityOnHand: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="0" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Unit (e.g. kg, units)</label>
-              <input type="text" value={editingItem?.unit || ''} onChange={e => setEditingItem({...editingItem, unit: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input type="text" value={editingItem?.unit || ''} onChange={e => setEditingItem({...editingItem, unit: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="units" />
             </div>
           </div>
 
@@ -227,11 +227,11 @@ export const InventoryView = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Reorder Thresh.</label>
-              <input type="number" min="0" value={editingItem?.reorderThreshold ?? ''} onChange={e => setEditingItem({...editingItem, reorderThreshold: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input type="number" min="0" value={editingItem?.reorderThreshold ?? ''} onChange={e => setEditingItem({...editingItem, reorderThreshold: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="10" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Cost/Unit (₹)</label>
-              <input type="number" step="0.01" min="0" value={editingItem?.costPerUnit ?? ''} onChange={e => setEditingItem({...editingItem, costPerUnit: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <input type="number" step="0.01" min="0" value={editingItem?.costPerUnit ?? ''} onChange={e => setEditingItem({...editingItem, costPerUnit: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="2.50" />
             </div>
           </div>
 
