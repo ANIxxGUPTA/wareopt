@@ -22,6 +22,9 @@ export const DeliverySlotView = () => {
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Partial<DeliveryOrder> | null>(null);
   const [editingSlot, setEditingSlot] = useState<Partial<DeliverySlot> | null>(null);
+  
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [isSubmittingSlot, setIsSubmittingSlot] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -64,6 +67,7 @@ export const DeliverySlotView = () => {
   const handleSaveOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmittingOrder(true);
     try {
       if (editingOrder?.id) {
         await updateDeliveryOrder(editingOrder.id, editingOrder);
@@ -74,6 +78,8 @@ export const DeliverySlotView = () => {
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save order.");
+    } finally {
+      setIsSubmittingOrder(false);
     }
   };
 
@@ -90,6 +96,7 @@ export const DeliverySlotView = () => {
   const handleSaveSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmittingSlot(true);
     try {
       if (editingSlot?.id) {
         await updateDeliverySlot(editingSlot.id, editingSlot);
@@ -100,6 +107,8 @@ export const DeliverySlotView = () => {
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save slot.");
+    } finally {
+      setIsSubmittingSlot(false);
     }
   };
 
@@ -361,7 +370,9 @@ export const DeliverySlotView = () => {
               <input required type="number" min="1" value={editingOrder?.priority || ''} onChange={e => setEditingOrder({...editingOrder, priority: parseInt(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
             </div>
           </div>
-          <button type="submit" className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700">Save Order</button>
+          <button type="submit" disabled={isSubmittingOrder} className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-50">
+            {isSubmittingOrder ? "Saving..." : "Save Order"}
+          </button>
         </form>
       </Modal>
 
@@ -386,7 +397,9 @@ export const DeliverySlotView = () => {
             <label className="block text-sm font-medium text-gray-700">Max Capacity (kg)</label>
             <input required type="number" step="0.1" min="0.1" value={editingSlot?.maxCapacityKg || ''} onChange={e => setEditingSlot({...editingSlot, maxCapacityKg: parseFloat(e.target.value)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
           </div>
-          <button type="submit" className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700">Save Slot</button>
+          <button type="submit" disabled={isSubmittingSlot} className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-50">
+            {isSubmittingSlot ? "Saving..." : "Save Slot"}
+          </button>
         </form>
       </Modal>
 

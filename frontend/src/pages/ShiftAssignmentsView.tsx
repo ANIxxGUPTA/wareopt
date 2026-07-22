@@ -26,6 +26,9 @@ export const ShiftAssignmentsView = () => {
   const [skillsInput, setSkillsInput] = useState("");
   const [editingShift, setEditingShift] = useState<Partial<Shift> | null>(null);
 
+  const [isSubmittingWorker, setIsSubmittingWorker] = useState(false);
+  const [isSubmittingShift, setIsSubmittingShift] = useState(false);
+
   const formatINR = (value: number) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
   };
@@ -71,19 +74,21 @@ export const ShiftAssignmentsView = () => {
   const handleSaveWorker = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmittingWorker(true);
     try {
-      const parsedSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
-      const workerToSave = { ...editingWorker, skills: parsedSkills };
-      
-      if (workerToSave.id) {
-        await updateWorker(workerToSave.id, workerToSave);
+      const skillsArray = skillsInput ? skillsInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const payload = { ...editingWorker, skills: skillsArray };
+      if (editingWorker?.id) {
+        await updateWorker(editingWorker.id, payload);
       } else {
-        await createWorker(workerToSave as Worker);
+        await createWorker(payload as Worker);
       }
       setIsWorkerModalOpen(false);
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save worker.");
+    } finally {
+      setIsSubmittingWorker(false);
     }
   };
 
@@ -100,16 +105,19 @@ export const ShiftAssignmentsView = () => {
   const handleSaveShift = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmittingShift(true);
     try {
       if (editingShift?.id) {
         await updateShift(editingShift.id, editingShift);
       } else {
-        await createShift(editingShift!);
+        await createShift(editingShift as Shift);
       }
       setIsShiftModalOpen(false);
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save shift.");
+    } finally {
+      setIsSubmittingShift(false);
     }
   };
 
@@ -327,7 +335,9 @@ export const ShiftAssignmentsView = () => {
             <label className="block text-sm font-medium text-gray-700">Skills (comma-separated)</label>
             <input required type="text" value={skillsInput} onChange={e => setSkillsInput(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking, packing" />
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700">Save Worker</button>
+          <button type="submit" disabled={isSubmittingWorker} className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700 disabled:opacity-50">
+            {isSubmittingWorker ? "Saving..." : "Save Worker"}
+          </button>
         </form>
       </Modal>
 
@@ -358,7 +368,9 @@ export const ShiftAssignmentsView = () => {
               <input required type="text" value={editingShift?.requiredSkill || ''} onChange={e => setEditingShift({...editingShift, requiredSkill: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking" />
             </div>
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700">Save Shift</button>
+          <button type="submit" disabled={isSubmittingShift} className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700 disabled:opacity-50">
+            {isSubmittingShift ? "Saving..." : "Save Shift"}
+          </button>
         </form>
       </Modal>
 
