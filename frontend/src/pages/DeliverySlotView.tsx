@@ -5,6 +5,9 @@ import { AlertCircle, Loader2, Play, Plus, Edit2, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Modal } from '../components/Modal';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -368,7 +371,19 @@ export const DeliverySlotView = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Deadline</label>
-            <input required type="datetime-local" step="1" value={editingOrder?.deadline || ''} onChange={e => setEditingOrder({...editingOrder, deadline: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+            <DatePicker
+              required
+              selected={editingOrder?.deadline ? new Date(editingOrder.deadline) : null}
+              onChange={(date: Date | null) => setEditingOrder({...editingOrder, deadline: date ? format(date, "yyyy-MM-dd'T'HH:mm:ss") : ''})}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="MMMM d, yyyy h:mm aa"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500"
+              placeholderText="Select deadline date and time"
+              wrapperClassName="w-full"
+            />
+            <p className="mt-1 text-xs text-gray-500">Click outside the calendar or press Enter to confirm your selection</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -402,11 +417,33 @@ export const DeliverySlotView = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Start Time</label>
-              <input required type="datetime-local" step="1" value={editingSlot?.startTime || ''} onChange={e => setEditingSlot({...editingSlot, startTime: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+              <DatePicker
+                required
+                selected={editingSlot?.startTime ? new Date(editingSlot.startTime) : null}
+                onChange={(date: Date | null) => setEditingSlot({...editingSlot, startTime: date ? format(date, "yyyy-MM-dd'T'HH:mm:ss") : ''})}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                dateFormat="MMMM d, yyyy h:mm aa"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500"
+                placeholderText="Select start time"
+                wrapperClassName="w-full"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">End Time</label>
-              <input required type="datetime-local" step="1" value={editingSlot?.endTime || ''} onChange={e => setEditingSlot({...editingSlot, endTime: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500" />
+              <DatePicker
+                required
+                selected={editingSlot?.endTime ? new Date(editingSlot.endTime) : null}
+                onChange={(date: Date | null) => setEditingSlot({...editingSlot, endTime: date ? format(date, "yyyy-MM-dd'T'HH:mm:ss") : ''})}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                dateFormat="MMMM d, yyyy h:mm aa"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-emerald-500 focus:ring-emerald-500"
+                placeholderText="Select end time"
+                wrapperClassName="w-full"
+              />
             </div>
           </div>
           <div>

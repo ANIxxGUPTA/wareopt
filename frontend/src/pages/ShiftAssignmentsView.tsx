@@ -29,6 +29,22 @@ export const ShiftAssignmentsView = () => {
   const [isSubmittingWorker, setIsSubmittingWorker] = useState(false);
   const [isSubmittingShift, setIsSubmittingShift] = useState(false);
 
+  const calculateDuration = (start?: string, end?: string) => {
+    if (!start || !end) return null;
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    
+    let startMinutes = startH * 60 + startM;
+    let endMinutes = endH * 60 + endM;
+    
+    if (endMinutes === 0 || endMinutes < startMinutes) {
+      endMinutes += 24 * 60;
+    }
+    
+    return (endMinutes - startMinutes) / 60;
+  };
+  const duration = calculateDuration(editingShift?.startTime, editingShift?.endTime);
+
   const formatINR = (value: number) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
   };
@@ -372,8 +388,14 @@ export const ShiftAssignmentsView = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700">End Time</label>
               <input required type="time" step="1" value={editingShift?.endTime || ''} onChange={e => setEditingShift({...editingShift, endTime: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" />
+              <p className="mt-1 text-xs text-gray-500">For overnight shifts ending at midnight, use 00:00:00 — this is interpreted as end of the current day.</p>
             </div>
           </div>
+          {duration !== null && (
+            <div className="bg-blue-50 text-blue-700 p-2 rounded-md text-sm font-medium">
+              Duration: {duration.toFixed(1)} hours
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Required Workers</label>
