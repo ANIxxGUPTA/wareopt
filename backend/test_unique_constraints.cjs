@@ -29,13 +29,13 @@ async function testUniqueConstraints() {
     await fetch(`${API_URL}/delivery-slots`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dayOfWeek: 2, startTime: '10:00', endTime: '12:00', capacityKg: 50 })
+        body: JSON.stringify({ startTime: '2026-07-22T10:00:00', endTime: '2026-07-22T12:00:00', maxCapacityKg: 50 })
     });
     
     res = await fetch(`${API_URL}/delivery-slots`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dayOfWeek: 2, startTime: '10:00', endTime: '12:00', capacityKg: 100 })
+        body: JSON.stringify({ startTime: '2026-07-22T10:00:00', endTime: '2026-07-22T12:00:00', maxCapacityKg: 100 })
     });
     
     if (res.status === 409) {

@@ -126,8 +126,8 @@ public class DeliveryController {
 
     @PostMapping("/delivery-slots")
     public ResponseEntity<DeliverySlot> createSlot(@Valid @RequestBody DeliverySlot slot) {
-        if (!slot.getEndTime().isAfter(slot.getStartTime())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        if (slot.getEndTime().equals(slot.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be the same as start time");
         }
         slot.setId(null);
         DeliverySlot savedSlot = deliverySlotRepository.save(slot);
@@ -139,8 +139,8 @@ public class DeliveryController {
         DeliverySlot slot = deliverySlotRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Slot not found"));
 
-        if (!slotDetails.getEndTime().isAfter(slotDetails.getStartTime())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        if (slotDetails.getEndTime().equals(slotDetails.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be the same as start time");
         }
 
         slot.setStartTime(slotDetails.getStartTime());

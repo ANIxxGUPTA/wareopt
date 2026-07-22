@@ -10,7 +10,7 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "delivery_slots", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"day_of_week", "start_time", "end_time"})
+    @UniqueConstraint(columnNames = {"start_time", "end_time"})
 })
 public class DeliverySlot {
     @Id

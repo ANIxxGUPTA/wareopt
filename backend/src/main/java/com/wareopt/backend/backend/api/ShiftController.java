@@ -44,8 +44,8 @@ public class ShiftController {
 
     @PostMapping("/shifts")
     public ResponseEntity<Shift> createShift(@Valid @RequestBody Shift shift) {
-        if (!shift.getEndTime().isAfter(shift.getStartTime())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        if (shift.getEndTime().equals(shift.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be the same as start time");
         }
         shift.setId(null);
         Shift savedShift = shiftRepository.save(shift);
@@ -57,8 +57,8 @@ public class ShiftController {
         Shift shift = shiftRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shift not found"));
 
-        if (!shiftDetails.getEndTime().isAfter(shiftDetails.getStartTime())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        if (shiftDetails.getEndTime().equals(shiftDetails.getStartTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time cannot be the same as start time");
         }
 
         shift.setDayOfWeek(shiftDetails.getDayOfWeek());
