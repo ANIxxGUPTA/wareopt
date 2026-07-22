@@ -1,14 +1,12 @@
-const axios = require('axios');
-
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://wareopt-backend.onrender.com/api';
 
 async function testConcurrency() {
     console.log('=== STARTING PHASE 1 CONCURRENCY TEST ===');
     
     // We will fire two optimize requests at the same time
     console.log('Firing two concurrent optimization requests...');
-    const req1 = axios.post(`${API_URL}/optimize/shifts`);
-    const req2 = axios.post(`${API_URL}/optimize/shifts`);
+    const req1 = fetch(`${API_URL}/optimize/shifts`, { method: 'POST' });
+    const req2 = fetch(`${API_URL}/optimize/shifts`, { method: 'POST' });
     
     try {
         const results = await Promise.allSettled([req1, req2]);
@@ -17,30 +15,31 @@ async function testConcurrency() {
         let conflicts = 0;
         let others = 0;
         
-        results.forEach((res, index) => {
+        for (let i = 0; i < results.length; i++) {
+            const res = results[i];
             if (res.status === 'fulfilled') {
-                console.log(`[Request ${index + 1}] Succeeded! Status: ${res.value.status}`);
-                successes++;
-            } else {
-                const err = res.reason;
-                if (err.response) {
-                    if (err.response.status === 409) {
-                        console.log(`[Request ${index + 1}] Conflict (Expected)! Status: 409, Message: ${err.response.data.message}`);
-                        conflicts++;
-                    } else if (err.response.status === 422) {
-                        console.log(`[Request ${index + 1}] Unprocessable Entity (Expected if no workers). Status: 422, Message: ${err.response.data.message}`);
-                        // Consider this a success in terms of the test's purpose if it doesn't crash
-                        successes++;
-                    } else {
-                        console.log(`[Request ${index + 1}] Failed with unexpected status: ${err.response.status}`);
-                        others++;
-                    }
+                const response = res.value;
+                if (response.status === 200 || response.status === 201) {
+                    console.log(`[Request ${i + 1}] Succeeded! Status: ${response.status}`);
+                    successes++;
+                } else if (response.status === 409) {
+                    const text = await response.text();
+                    console.log(`[Request ${i + 1}] Conflict (Expected)! Status: 409, Message: ${text}`);
+                    conflicts++;
+                } else if (response.status === 422) {
+                    const text = await response.text();
+                    console.log(`[Request ${i + 1}] Unprocessable Entity. Status: 422, Message: ${text}`);
+                    successes++;
                 } else {
-                    console.log(`[Request ${index + 1}] Failed with no response: ${err.message}`);
+                    const text = await response.text();
+                    console.log(`[Request ${i + 1}] Failed with unexpected status: ${response.status}, Message: ${text}`);
                     others++;
                 }
+            } else {
+                console.log(`[Request ${i + 1}] Failed with no response: ${res.reason}`);
+                others++;
             }
-        });
+        }
         
         console.log(`\nSummary: ${successes} successful (or 422 valid), ${conflicts} conflicts (409), ${others} other errors.`);
         

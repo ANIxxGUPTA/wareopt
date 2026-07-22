@@ -27,6 +27,54 @@ public class ShiftOptimizer {
         Loader.loadNativeLibraries();
     }
 
+    private static class Interval {
+        long start, end;
+        Interval(long s, long e) { start = s; end = e; }
+    }
+
+    private List<Interval> getIntervals(Shift shift) {
+        long startMinutes = (shift.getDayOfWeek() - 1) * 24 * 60 + shift.getStartTime().getHour() * 60 + shift.getStartTime().getMinute();
+        long endMinutes = (shift.getDayOfWeek() - 1) * 24 * 60 + shift.getEndTime().getHour() * 60 + shift.getEndTime().getMinute();
+        
+        // Overnight shift validation uses <= now instead of isAfter
+        if (!shift.getEndTime().isAfter(shift.getStartTime())) {
+            endMinutes = startMinutes + 24 * 60 - (shift.getStartTime().getHour() * 60 + shift.getStartTime().getMinute()) + (shift.getEndTime().getHour() * 60 + shift.getEndTime().getMinute());
+            // simpler: endMinutes += 24*60 is wrong if we recalculate it? 
+            // Actually, if we just say: endMinutes = (day-1)*24*60 + endHour*60 + endMin
+            // Since it's overnight, end is next day, so we add 24*60 to endMinutes.
+        }
+        
+        // Let's recalculate accurately
+        long startM = (shift.getDayOfWeek() - 1) * 24 * 60 + shift.getStartTime().getHour() * 60 + shift.getStartTime().getMinute();
+        long endM = startM + Duration.between(shift.getStartTime(), shift.getEndTime()).toMinutes();
+        if (endM <= startM) endM += 24 * 60;
+
+        List<Interval> intervals = new ArrayList<>();
+        if (endM > 7 * 24 * 60) {
+            intervals.add(new Interval(startM, 7 * 24 * 60));
+            intervals.add(new Interval(0, endM - 7 * 24 * 60));
+        } else {
+            intervals.add(new Interval(startM, endM));
+        }
+        return intervals;
+    }
+
+    private boolean checkIntervalsOverlap(List<Interval> list1, List<Interval> list2) {
+        for (Interval i1 : list1) {
+            for (Interval i2 : list2) {
+                // Strict overlap: touch is OK
+                if (i1.start < i2.end && i2.start < i1.end) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean shiftsOverlap(Shift s1, Shift s2) {
+        return checkIntervalsOverlap(getIntervals(s1), getIntervals(s2));
+    }
+
     private boolean hasRequiredSkills(Worker worker, Shift shift) {
         if (shift.getRequiredSkill() == null || shift.getRequiredSkill().trim().isEmpty()) {
             return true;
@@ -116,6 +164,19 @@ public class ShiftOptimizer {
                 }
             }
             model.addGreaterOrEqual(LinearExpr.sum(shiftVars.toArray(new IntVar[0])), shift.getRequiredWorkerCount());
+        }
+
+        // No Overlap Constraint
+        for (int w = 0; w < workers.size(); w++) {
+            for (int s1 = 0; s1 < shifts.size(); s1++) {
+                if (x[w][s1] == null) continue;
+                for (int s2 = s1 + 1; s2 < shifts.size(); s2++) {
+                    if (x[w][s2] == null) continue;
+                    if (shiftsOverlap(shifts.get(s1), shifts.get(s2))) {
+                        model.addLessOrEqual(LinearExpr.sum(new IntVar[]{ x[w][s1], x[w][s2] }), 1);
+                    }
+                }
+            }
         }
 
         // Max hours constraint
