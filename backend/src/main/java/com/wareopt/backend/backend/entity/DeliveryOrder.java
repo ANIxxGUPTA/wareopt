@@ -36,11 +36,11 @@ public class DeliveryOrder {
     private Integer priority;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(255) default 'PENDING'")
+    @Column(nullable = true, columnDefinition = "varchar(255) default 'PENDING'")
     private OrderStatus status = OrderStatus.PENDING;
 
     @Version
-    @Column(nullable = false, columnDefinition = "bigint default 0")
+    @Column(nullable = true, columnDefinition = "bigint default 0")
     private Long version = 0L;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
