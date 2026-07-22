@@ -254,7 +254,7 @@ export const ShiftAssignmentsView = () => {
         await createWorker(payload as Worker);
       }
       setIsWorkerModalOpen(false);
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save worker.");
     } finally {
@@ -283,7 +283,7 @@ export const ShiftAssignmentsView = () => {
         await createShift(editingShift as Shift);
       }
       setIsShiftModalOpen(false);
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save shift.");
     } finally {

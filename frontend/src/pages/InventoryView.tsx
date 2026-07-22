@@ -58,7 +58,7 @@ export const InventoryView = () => {
         await createInventoryItem(editingItem);
       }
       setIsModalOpen(false);
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         setError(err.response.data.message);
