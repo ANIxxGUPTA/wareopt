@@ -46,8 +46,8 @@ public class DeliverySlotOptimizer {
                 .count();
                 
             if (eligibleSlotsCount == 0) {
-                validationErrors.add(String.format("Order at %.4f, %.4f has deadline %s which is before every delivery slot's end time — this order can never be delivered.",
-                    order.getDestinationLat(), order.getDestinationLng(), order.getDeadline().format(dtFormatter)));
+                validationErrors.add(String.format("Order #%d (%.4f, %.4f): Deadline (%s) is before every slot's end time. Order cannot be delivered.",
+                    order.getId(), order.getDestinationLat(), order.getDestinationLng(), order.getDeadline().format(dtFormatter)));
             } else {
                 long orderWeight = (long)(order.getWeightKg().doubleValue() * 1000);
                 boolean fitsInAnyEligible = slots.stream()
@@ -55,8 +55,8 @@ public class DeliverySlotOptimizer {
                     .anyMatch(s -> (long)(s.getMaxCapacityKg().doubleValue() * 1000) >= orderWeight);
                     
                 if (!fitsInAnyEligible) {
-                    validationErrors.add(String.format("Order at %.4f, %.4f weighs %.1f kg, which exceeds the capacity of all delivery slots it is eligible for.",
-                        order.getDestinationLat(), order.getDestinationLng(), order.getWeightKg()));
+                    validationErrors.add(String.format("Order #%d (%.4f, %.4f): Weight (%.1f kg) exceeds the maximum capacity of all eligible slots.",
+                        order.getId(), order.getDestinationLat(), order.getDestinationLng(), order.getWeightKg()));
                 }
             }
         }

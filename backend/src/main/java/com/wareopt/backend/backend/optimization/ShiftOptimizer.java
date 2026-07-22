@@ -35,12 +35,12 @@ public class ShiftOptimizer {
                 .count();
                 
             if (eligibleWorkers == 0 && shift.getRequiredWorkerCount() > 0) {
-                validationErrors.add(String.format("No worker has the skill '%s' required by Shift on Day %d %s-%s.",
-                    shift.getRequiredSkill() != null ? shift.getRequiredSkill() : "any", shift.getDayOfWeek(), 
-                    shift.getStartTime().format(timeFormatter), shift.getEndTime().format(timeFormatter)));
+                validationErrors.add(String.format("Shift #%d (Day %d %s-%s): No worker has the required skill '%s'.",
+                    shift.getId(), shift.getDayOfWeek(), shift.getStartTime().format(timeFormatter), shift.getEndTime().format(timeFormatter),
+                    shift.getRequiredSkill() != null ? shift.getRequiredSkill() : "any"));
             } else if (eligibleWorkers < shift.getRequiredWorkerCount()) {
-                validationErrors.add(String.format("Shift on Day %d %s-%s requires %d workers, but only %d workers have the required skill.",
-                    shift.getDayOfWeek(), shift.getStartTime().format(timeFormatter), shift.getEndTime().format(timeFormatter), 
+                validationErrors.add(String.format("Shift #%d (Day %d %s-%s): Requires %d workers, but only %d have the required skill.",
+                    shift.getId(), shift.getDayOfWeek(), shift.getStartTime().format(timeFormatter), shift.getEndTime().format(timeFormatter), 
                     shift.getRequiredWorkerCount(), eligibleWorkers));
             }
             
@@ -53,8 +53,8 @@ public class ShiftOptimizer {
                 .anyMatch(w -> w.getMaxHoursPerWeek() >= shiftHours);
                 
             if (!anyCanWork && eligibleWorkers > 0) {
-                validationErrors.add(String.format("Shift on Day %d %s-%s is %d hours long, which exceeds the weekly maximum for all eligible workers.",
-                    shift.getDayOfWeek(), shift.getStartTime().format(timeFormatter), shift.getEndTime().format(timeFormatter), shiftHours));
+                validationErrors.add(String.format("Shift #%d (Day %d %s-%s): Length (%d hours) exceeds the weekly maximum for all eligible workers.",
+                    shift.getId(), shift.getDayOfWeek(), shift.getStartTime().format(timeFormatter), shift.getEndTime().format(timeFormatter), shiftHours));
             }
         }
         
