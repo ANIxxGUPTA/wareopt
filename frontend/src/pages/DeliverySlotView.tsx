@@ -42,6 +42,10 @@ export const DeliverySlotView = () => {
       const [slotRes, orderRes] = await Promise.all([getDeliverySlots(), getDeliveryOrders()]);
       setSlots(slotRes.data);
       setOrders(orderRes.data);
+
+      if (slotRes.data.length === 0 && orderRes.data.length === 0 && !location.state?.tab) {
+        setActiveTab('orders');
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to fetch data.");
@@ -170,12 +174,6 @@ export const DeliverySlotView = () => {
 
       <div className="flex border-b border-gray-200">
         <button
-          onClick={() => setActiveTab('optimize')}
-          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'optimize' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          Optimization & Results
-        </button>
-        <button
           onClick={() => setActiveTab('orders')}
           className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'orders' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
@@ -186,6 +184,12 @@ export const DeliverySlotView = () => {
           className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'slots' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           Manage Slots
+        </button>
+        <button
+          onClick={() => setActiveTab('optimize')}
+          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'optimize' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Optimization & Results
         </button>
       </div>
 

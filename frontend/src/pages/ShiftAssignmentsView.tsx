@@ -62,6 +62,10 @@ export const ShiftAssignmentsView = () => {
       const [shiftRes, workerRes] = await Promise.all([getShifts(), getWorkers()]);
       setShifts(shiftRes.data);
       setWorkers(workerRes.data);
+      
+      if (shiftRes.data.length === 0 && workerRes.data.length === 0 && !location.state?.tab) {
+        setActiveTab('workers');
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to fetch data.");
@@ -172,12 +176,6 @@ export const ShiftAssignmentsView = () => {
 
       <div className="flex border-b border-gray-200">
         <button
-          onClick={() => setActiveTab('optimize')}
-          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'optimize' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          Optimization & Results
-        </button>
-        <button
           onClick={() => setActiveTab('workers')}
           className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'workers' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
@@ -188,6 +186,12 @@ export const ShiftAssignmentsView = () => {
           className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'shifts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           Manage Shifts
+        </button>
+        <button
+          onClick={() => setActiveTab('optimize')}
+          className={`py-2 px-4 font-medium text-sm border-b-2 ${activeTab === 'optimize' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Optimization & Results
         </button>
       </div>
 
