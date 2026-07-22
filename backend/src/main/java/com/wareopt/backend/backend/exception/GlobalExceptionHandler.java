@@ -2,6 +2,7 @@ package com.wareopt.backend.backend.exception;
 
 import com.wareopt.backend.backend.api.dto.ApiError;
 import com.wareopt.backend.backend.optimization.InfeasibleSolutionException;
+import com.wareopt.backend.backend.exception.OptimizationInProgressException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleInfeasibleSolution(InfeasibleSolutionException ex) {
         ApiError error = new ApiError(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage(), ex.getReasons());
         return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(OptimizationInProgressException.class)
+    public ResponseEntity<ApiError> handleOptimizationInProgress(OptimizationInProgressException ex) {
+        ApiError error = new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage(), null);
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(ResponseStatusException.class)

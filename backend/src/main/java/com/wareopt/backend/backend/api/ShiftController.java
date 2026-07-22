@@ -8,6 +8,7 @@ import com.wareopt.backend.backend.optimization.ShiftOptimizer;
 import com.wareopt.backend.backend.repository.ShiftAssignmentRepository;
 import com.wareopt.backend.backend.repository.ShiftRepository;
 import com.wareopt.backend.backend.repository.WorkerRepository;
+import com.wareopt.backend.backend.api.OptimizationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class ShiftController {
     private ShiftAssignmentRepository shiftAssignmentRepository;
 
     @Autowired
-    private ShiftOptimizer shiftOptimizer;
+    private OptimizationService optimizationService;
 
     @GetMapping("/shifts")
     public List<Shift> getAllShifts() {
@@ -89,24 +90,6 @@ public class ShiftController {
 
     @PostMapping("/optimize/shifts")
     public ShiftOptimizationResponse optimizeShifts() {
-        List<Worker> workers = workerRepository.findAll();
-        List<Shift> shifts = shiftRepository.findAll();
-
-        long startTime = System.currentTimeMillis();
-        List<ShiftAssignment> assignments = shiftOptimizer.optimize(workers, shifts);
-        long solveTime = System.currentTimeMillis() - startTime;
-
-        shiftAssignmentRepository.deleteAll();
-        shiftAssignmentRepository.saveAll(assignments);
-
-        BigDecimal totalCost = BigDecimal.ZERO;
-        for (ShiftAssignment assignment : assignments) {
-            BigDecimal hourlyRate = assignment.getWorker().getHourlyCost() == null ? BigDecimal.ZERO : assignment.getWorker().getHourlyCost();
-            long hours = Duration.between(assignment.getShift().getStartTime(), assignment.getShift().getEndTime()).toHours();
-            if (hours < 0) hours += 24;
-            totalCost = totalCost.add(hourlyRate.multiply(BigDecimal.valueOf(hours)));
-        }
-
-        return new ShiftOptimizationResponse(assignments, totalCost, solveTime);
+        return optimizationService.optimizeShifts();
     }
 }

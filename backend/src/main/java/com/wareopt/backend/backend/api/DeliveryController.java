@@ -9,6 +9,7 @@ import com.wareopt.backend.backend.optimization.DeliverySlotOptimizer;
 import com.wareopt.backend.backend.repository.DeliveryOrderRepository;
 import com.wareopt.backend.backend.repository.DeliverySlotRepository;
 import com.wareopt.backend.backend.repository.SlotAssignmentRepository;
+import com.wareopt.backend.backend.api.OptimizationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class DeliveryController {
     private SlotAssignmentRepository slotAssignmentRepository;
 
     @Autowired
-    private DeliverySlotOptimizer deliverySlotOptimizer;
+    private OptimizationService optimizationService;
 
     @Autowired
     private DeliveryService deliveryService;
@@ -172,37 +173,6 @@ public class DeliveryController {
 
     @PostMapping("/optimize/delivery")
     public DeliveryOptimizationResponse optimizeDelivery() {
-        List<DeliveryOrder> allOrders = deliveryOrderRepository.findAll();
-        List<DeliveryOrder> pendingOrders = allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.PENDING)
-                .collect(Collectors.toList());
-
-        List<DeliverySlot> slots = deliverySlotRepository.findAll();
-
-        List<SlotAssignment> fulfilledAssignments = slotAssignmentRepository.findAll().stream()
-                .filter(a -> a.getOrder().getStatus() == OrderStatus.FULFILLED)
-                .collect(Collectors.toList());
-
-        java.util.Map<Long, Long> fulfilledWeightBySlot = new java.util.HashMap<>();
-        for (SlotAssignment a : fulfilledAssignments) {
-            fulfilledWeightBySlot.merge(a.getSlot().getId(), 
-                (long)(a.getOrder().getWeightKg().doubleValue() * 1000), Long::sum);
-        }
-
-        long startTime = System.currentTimeMillis();
-        List<SlotAssignment> assignments = deliverySlotOptimizer.optimize(pendingOrders, slots, fulfilledWeightBySlot);
-        long solveTime = System.currentTimeMillis() - startTime;
-
-        slotAssignmentRepository.deleteByOrderStatus(OrderStatus.PENDING);
-        slotAssignmentRepository.saveAll(assignments);
-
-        BigDecimal totalDistance = BigDecimal.ZERO;
-        for (SlotAssignment assignment : assignments) {
-            if (assignment.getEstimatedDistanceKm() != null) {
-                totalDistance = totalDistance.add(assignment.getEstimatedDistanceKm());
-            }
-        }
-
-        return new DeliveryOptimizationResponse(assignments, totalDistance, solveTime);
+        return optimizationService.optimizeDelivery();
     }
 }
