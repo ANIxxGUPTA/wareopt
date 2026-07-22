@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,5 +86,30 @@ class InventoryServiceTest {
         assertNotNull(result);
         assertEquals("SKU-123", result.getSku());
         verify(inventoryItemRepository).save(any(InventoryItem.class));
+    }
+
+    @Test
+    void getLowStockItems_returnsCorrectItems() {
+        InventoryItem lowStock = new InventoryItem();
+        lowStock.setSku("LOW-1");
+        lowStock.setQuantityOnHand(5);
+        lowStock.setReorderThreshold(10);
+
+        InventoryItem fineStock = new InventoryItem();
+        fineStock.setSku("FINE-1");
+        fineStock.setQuantityOnHand(20);
+        fineStock.setReorderThreshold(10);
+
+        InventoryItem nullThreshold = new InventoryItem();
+        nullThreshold.setSku("NULL-1");
+        nullThreshold.setQuantityOnHand(2);
+        nullThreshold.setReorderThreshold(null);
+
+        when(inventoryItemRepository.findAll()).thenReturn(List.of(lowStock, fineStock, nullThreshold));
+
+        List<InventoryItem> result = inventoryService.getLowStockItems();
+
+        assertEquals(1, result.size());
+        assertEquals("LOW-1", result.get(0).getSku());
     }
 }

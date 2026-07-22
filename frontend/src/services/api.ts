@@ -109,6 +109,7 @@ export const getSlotAssignments = (slotId: number) => api.get<SlotAssignment[]>(
 export const optimizeDelivery = () => api.post<DeliveryOptimizationResponse>('/optimize/delivery');
 
 export const getInventory = () => api.get<InventoryItem[]>('/inventory');
+export const getLowStockInventory = () => api.get<InventoryItem[]>('/inventory/low-stock');
 export const createInventoryItem = (item: Partial<InventoryItem>) => api.post<InventoryItem>('/inventory', item);
 export const updateInventoryItem = (id: number, item: Partial<InventoryItem>) => api.put<InventoryItem>(`/inventory/${id}`, item);
 export const deleteInventoryItem = (id: number) => api.delete(`/inventory/${id}`);

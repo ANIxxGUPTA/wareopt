@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryService {
@@ -17,6 +18,12 @@ public class InventoryService {
 
     public List<InventoryItem> getAllInventoryItems() {
         return inventoryItemRepository.findAll();
+    }
+
+    public List<InventoryItem> getLowStockItems() {
+        return inventoryItemRepository.findAll().stream()
+                .filter(item -> item.getReorderThreshold() != null && item.getQuantityOnHand() <= item.getReorderThreshold())
+                .collect(Collectors.toList());
     }
 
     public InventoryItem getInventoryItemById(Long id) {

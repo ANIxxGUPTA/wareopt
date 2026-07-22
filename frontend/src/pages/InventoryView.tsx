@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem } from '../services/api';
+import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory } from '../services/api';
 import type { InventoryItem } from '../services/api';
-import { AlertCircle, Edit2, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Edit2, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import axios from 'axios';
 
 export const InventoryView = () => {
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [lowStockCount, setLowStockCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<InventoryItem>>({});
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +19,12 @@ export const InventoryView = () => {
 
   const fetchData = async () => {
     try {
-      const res = await getInventory();
+      const [res, lowStockRes] = await Promise.all([
+        getInventory(),
+        getLowStockInventory()
+      ]);
       setItems(res.data);
+      setLowStockCount(lowStockRes.data.length);
     } catch (err) {
       console.error(err);
     }
@@ -85,6 +90,18 @@ export const InventoryView = () => {
         </div>
       </div>
 
+      {lowStockCount > 0 && !isModalOpen && (
+        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 flex gap-3 shadow-sm rounded-r-md">
+          <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-orange-800 text-sm font-semibold">Low Stock Alert</h3>
+            <p className="text-orange-700 text-sm mt-1">
+              {lowStockCount} item{lowStockCount === 1 ? ' is' : 's are'} at or below their reorder threshold.
+            </p>
+          </div>
+        </div>
+      )}
+
       {error && !isModalOpen && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3 shadow-sm">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
@@ -114,24 +131,31 @@ export const InventoryView = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.sku}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.quantityOnHand} {item.unit}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.warehouseLocation || '-'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.reorderThreshold !== undefined ? item.reorderThreshold : '-'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{formatCurrency(item.costPerUnit)}</td>
-                  <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
-                    <button onClick={() => { setEditingItem(item); setIsModalOpen(true); }} className="text-blue-600 hover:text-blue-900">
-                      <Edit2 className="w-4 h-4"/>
-                    </button>
-                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">
-                      <Trash2 className="w-4 h-4"/>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {items.map(item => {
+                const isLowStock = item.reorderThreshold !== undefined && item.quantityOnHand <= item.reorderThreshold;
+                return (
+                  <tr key={item.id} className={isLowStock ? "bg-orange-50/50" : ""}>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.sku}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={isLowStock ? "font-semibold text-orange-600" : "text-gray-500"}>
+                        {item.quantityOnHand} {item.unit}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{item.warehouseLocation || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{item.reorderThreshold !== undefined ? item.reorderThreshold : '-'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{formatCurrency(item.costPerUnit)}</td>
+                    <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
+                      <button onClick={() => { setEditingItem(item); setIsModalOpen(true); }} className="text-blue-600 hover:text-blue-900">
+                        <Edit2 className="w-4 h-4"/>
+                      </button>
+                      <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">
+                        <Trash2 className="w-4 h-4"/>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

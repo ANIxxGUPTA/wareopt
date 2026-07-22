@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Users, Calendar, Truck, Box, RotateCcw, AlertCircle, Loader2 } from 'lucide-react';
-import { getWorkers, getShifts, getDeliveryOrders, getDeliverySlots, resetDatabase } from '../services/api';
+import { Users, Calendar, Truck, Box, RotateCcw, AlertCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { getWorkers, getShifts, getDeliveryOrders, getDeliverySlots, resetDatabase, getLowStockInventory } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 export const DashboardHome = () => {
-  const [counts, setCounts] = useState({ workers: 0, shifts: 0, orders: 0, slots: 0 });
+  const [counts, setCounts] = useState({ workers: 0, shifts: 0, orders: 0, slots: 0, lowStock: 0 });
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchCounts = () => {
-    Promise.all([getWorkers(), getShifts(), getDeliveryOrders(), getDeliverySlots()]).then(
-      ([resWorkers, resShifts, resOrders, resSlots]) => {
+    Promise.all([getWorkers(), getShifts(), getDeliveryOrders(), getDeliverySlots(), getLowStockInventory()]).then(
+      ([resWorkers, resShifts, resOrders, resSlots, resLowStock]) => {
         setCounts({
           workers: resWorkers.data.length,
           shifts: resShifts.data.length,
           orders: resOrders.data.length,
           slots: resSlots.data.length,
+          lowStock: resLowStock.data.length,
         });
       }
     ).catch(err => {
@@ -50,6 +51,7 @@ export const DashboardHome = () => {
     { label: 'Total Shifts', value: counts.shifts, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-100' },
     { label: 'Delivery Orders', value: counts.orders, icon: Box, color: 'text-amber-600', bg: 'bg-amber-100' },
     { label: 'Delivery Slots', value: counts.slots, icon: Truck, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { label: 'Low Stock Alerts', value: counts.lowStock, icon: AlertTriangle, color: counts.lowStock > 0 ? 'text-red-600' : 'text-gray-500', bg: counts.lowStock > 0 ? 'bg-red-100' : 'bg-gray-100' },
   ];
 
   return (
