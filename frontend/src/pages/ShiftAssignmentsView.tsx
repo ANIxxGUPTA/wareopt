@@ -6,10 +6,151 @@ import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { Modal } from '../components/Modal';
 
+const CalendarView = ({ shifts, assignmentsByShift, setEditingShift, setIsShiftModalOpen }: any) => {
+  const days = [1, 2, 3, 4, 5, 6, 7];
+  const hours = Array.from({ length: 25 }, (_, i) => i); // 0 to 24
+
+  const parseTime = (timeStr: string) => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h + (m / 60);
+  };
+
+  const getShiftBlocks = () => {
+    let blocks: any[] = [];
+    shifts.forEach((shift: any) => {
+      const start = parseTime(shift.startTime);
+      const end = parseTime(shift.endTime);
+      
+      let endT = end === 0 ? 24 : end;
+
+      if (endT <= start) {
+        // Crosses midnight
+        // Block 1: start to 24:00 on dayOfWeek
+        blocks.push({
+          ...shift,
+          displayDay: shift.dayOfWeek,
+          displayStart: start,
+          displayEnd: 24,
+          isMidnightCross: true,
+          originalShift: shift
+        });
+        // Block 2: 00:00 to end on next day
+        const nextDay = shift.dayOfWeek === 7 ? 1 : shift.dayOfWeek + 1;
+        blocks.push({
+          ...shift,
+          displayDay: nextDay,
+          displayStart: 0,
+          displayEnd: endT,
+          isMidnightCross: true,
+          originalShift: shift
+        });
+      } else {
+        blocks.push({
+          ...shift,
+          displayDay: shift.dayOfWeek,
+          displayStart: start,
+          displayEnd: endT,
+          originalShift: shift
+        });
+      }
+    });
+
+    // Detect overlaps per day
+    days.forEach(day => {
+      const dayBlocks = blocks.filter(b => b.displayDay === day);
+      for (let i = 0; i < dayBlocks.length; i++) {
+        for (let j = i + 1; j < dayBlocks.length; j++) {
+          const b1 = dayBlocks[i];
+          const b2 = dayBlocks[j];
+          if (b1.displayStart < b2.displayEnd && b2.displayStart < b1.displayEnd) {
+            b1.overlap = true;
+            b2.overlap = true;
+          }
+        }
+      }
+    });
+    return blocks;
+  };
+
+  const shiftBlocks = getShiftBlocks();
+  const HOUR_HEIGHT = 48; // px
+
+  return (
+    <div className="border border-gray-200 rounded-lg bg-white overflow-x-auto shadow-sm">
+      <div className="min-w-[800px]">
+        {/* Header */}
+        <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
+          <div className="p-3 text-center text-xs font-semibold text-gray-500 uppercase">Time</div>
+          {days.map(d => (
+            <div key={d} className="p-3 text-center text-xs font-semibold text-gray-500 uppercase border-l border-gray-200">
+              Day {d}
+            </div>
+          ))}
+        </div>
+        
+        {/* Grid Body */}
+        <div className="relative grid grid-cols-8">
+          {/* Time column */}
+          <div className="relative border-r border-gray-200">
+            {hours.map(h => (
+              <div key={h} style={{ height: HOUR_HEIGHT }} className="relative pr-2 text-right">
+                <span className="absolute right-2 -top-2 text-xs text-gray-400">{h.toString().padStart(2, '0')}:00</span>
+              </div>
+            ))}
+          </div>
+          
+          {/* Day columns */}
+          {days.map(d => (
+            <div key={d} className="relative border-r border-gray-200 last:border-r-0">
+              {/* Background hour lines */}
+              {hours.map(h => (
+                <div key={h} style={{ height: HOUR_HEIGHT }} className="border-b border-gray-100 last:border-b-0"></div>
+              ))}
+              
+              {/* Shift Blocks for this day */}
+              {shiftBlocks.filter(b => b.displayDay === d).map((block, idx) => {
+                const top = block.displayStart * HOUR_HEIGHT;
+                const height = (block.displayEnd - block.displayStart) * HOUR_HEIGHT;
+                const assignments = assignmentsByShift[block.originalShift.id] || [];
+                const isOverlapping = block.overlap;
+                
+                return (
+                  <div 
+                    key={idx}
+                    onClick={() => { setEditingShift(block.originalShift); setIsShiftModalOpen(true); }}
+                    className={`absolute left-1 right-1 rounded-md p-2 text-xs overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md border ${isOverlapping ? 'bg-red-50 border-red-300 z-10' : 'bg-blue-50 border-blue-200 hover:border-blue-400'}`}
+                    style={{ top, height }}
+                  >
+                    <div className={`font-semibold ${isOverlapping ? 'text-red-700' : 'text-blue-700'} mb-1`}>
+                      {block.originalShift.startTime.slice(0, 5)} - {block.originalShift.endTime.slice(0, 5)}
+                    </div>
+                    <div className="font-medium text-gray-700 truncate">{block.originalShift.requiredSkill}</div>
+                    <div className="mt-1 flex flex-col gap-0.5">
+                      {assignments.length > 0 ? (
+                        assignments.map((a: any) => (
+                          <span key={a.id} className="truncate text-gray-600 font-medium bg-white/50 px-1 rounded">{a.worker.name}</span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 italic">Unassigned</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ShiftAssignmentsView = () => {
   const location = useLocation();
   const initialTab = location.state?.tab || 'optimize';
   const [activeTab, setActiveTab] = useState<'optimize' | 'workers' | 'shifts'>(initialTab);
+  const [shiftViewMode, setShiftViewMode] = useState<'table' | 'calendar'>('table');
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [assignments, setAssignments] = useState<ShiftAssignment[]>([]);
@@ -255,34 +396,45 @@ export const ShiftAssignmentsView = () => {
 
       {activeTab === 'shifts' && (
         <div className="space-y-4">
-          <button onClick={() => { setEditingShift({ dayOfWeek: 1 }); setIsShiftModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
-            <Plus className="w-4 h-4" /> Add Shift
-          </button>
-          <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day / Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Req. Count</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Skill</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {shifts.map(s => (
-                  <tr key={s.id}>
-                    <td className="px-6 py-4 text-sm text-gray-900">Day {s.dayOfWeek} • {s.startTime} - {s.endTime}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{s.requiredWorkerCount}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{s.requiredSkill}</td>
-                    <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
-                      <button onClick={() => { setEditingShift(s); setIsShiftModalOpen(true); }} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4"/></button>
-                      <button onClick={() => handleDeleteShift(s.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex justify-between items-center">
+            <button onClick={() => { setEditingShift({ dayOfWeek: 1 }); setIsShiftModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+              <Plus className="w-4 h-4" /> Add Shift
+            </button>
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button onClick={() => setShiftViewMode('table')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${shiftViewMode === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>Table</button>
+              <button onClick={() => setShiftViewMode('calendar')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${shiftViewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>Calendar</button>
+            </div>
           </div>
+          
+          {shiftViewMode === 'table' ? (
+            <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day / Time</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Req. Count</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Skill</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {shifts.map(s => (
+                    <tr key={s.id}>
+                      <td className="px-6 py-4 text-sm text-gray-900">Day {s.dayOfWeek} • {s.startTime} - {s.endTime}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{s.requiredWorkerCount}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{s.requiredSkill}</td>
+                      <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
+                        <button onClick={() => { setEditingShift(s); setIsShiftModalOpen(true); }} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4"/></button>
+                        <button onClick={() => handleDeleteShift(s.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <CalendarView shifts={shifts} assignmentsByShift={assignmentsByShift} setEditingShift={setEditingShift} setIsShiftModalOpen={setIsShiftModalOpen} />
+          )}
         </div>
       )}
 
