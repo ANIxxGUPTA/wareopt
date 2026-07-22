@@ -63,7 +63,8 @@ export const ShiftAssignmentsView = () => {
       setShifts(shiftRes.data);
       setWorkers(workerRes.data);
       
-      if (shiftRes.data.length === 0 && workerRes.data.length === 0 && !location.state?.tab) {
+      const state = (location as any).state as { tab?: string } | undefined;
+      if (shiftRes.data.length === 0 && workerRes.data.length === 0 && !state?.tab) {
         setActiveTab('workers');
       }
     } catch (err) {

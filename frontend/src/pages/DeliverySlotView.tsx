@@ -45,7 +45,8 @@ export const DeliverySlotView = () => {
       setSlots(slotRes.data);
       setOrders(orderRes.data);
 
-      if (slotRes.data.length === 0 && orderRes.data.length === 0 && !location.state?.tab) {
+      const state = (location as any).state as { tab?: string } | undefined;
+      if (slotRes.data.length === 0 && orderRes.data.length === 0 && !state?.tab) {
         setActiveTab('orders');
       }
     } catch (err) {
