@@ -313,8 +313,8 @@ export const DeliverySlotView = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <CartesianGrid />
-                    <XAxis type="number" dataKey="x" name="Longitude" />
-                    <YAxis type="number" dataKey="y" name="Latitude" />
+                    <XAxis type="number" dataKey="x" name="Longitude" domain={['auto', 'auto']} />
+                    <YAxis type="number" dataKey="y" name="Latitude" domain={['auto', 'auto']} />
                     <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                     <Scatter name="Orders" data={plotData} fill="#8884d8">
                       {plotData.map((entry, index) => {
