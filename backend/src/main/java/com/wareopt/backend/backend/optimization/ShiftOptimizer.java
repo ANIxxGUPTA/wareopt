@@ -26,6 +26,38 @@ public class ShiftOptimizer {
     public List<ShiftAssignment> optimize(List<Worker> workers, List<Shift> shifts) {
         if (shifts.isEmpty()) return new ArrayList<>();
 
+        List<String> validationErrors = new ArrayList<>();
+        for (Shift shift : shifts) {
+            long eligibleWorkers = workers.stream()
+                .filter(w -> shift.getRequiredSkill() == null || (w.getSkills() != null && w.getSkills().contains(shift.getRequiredSkill())))
+                .count();
+                
+            if (eligibleWorkers == 0 && shift.getRequiredWorkerCount() > 0) {
+                validationErrors.add(String.format("No worker has the skill '%s' required by Shift on Day %d %s-%s.",
+                    shift.getRequiredSkill() != null ? shift.getRequiredSkill() : "any", shift.getDayOfWeek(), shift.getStartTime(), shift.getEndTime()));
+            } else if (eligibleWorkers < shift.getRequiredWorkerCount()) {
+                validationErrors.add(String.format("Shift on Day %d %s-%s requires %d workers, but only %d workers have the required skill.",
+                    shift.getDayOfWeek(), shift.getStartTime(), shift.getEndTime(), shift.getRequiredWorkerCount(), eligibleWorkers));
+            }
+            
+            long hours = Duration.between(shift.getStartTime(), shift.getEndTime()).toHours();
+            if (hours < 0) hours += 24;
+            
+            final long shiftHours = hours;
+            boolean anyCanWork = workers.stream()
+                .filter(w -> shift.getRequiredSkill() == null || (w.getSkills() != null && w.getSkills().contains(shift.getRequiredSkill())))
+                .anyMatch(w -> w.getMaxHoursPerWeek() >= shiftHours);
+                
+            if (!anyCanWork && eligibleWorkers > 0) {
+                validationErrors.add(String.format("Shift on Day %d %s-%s is %d hours long, which exceeds the weekly maximum for all eligible workers.",
+                    shift.getDayOfWeek(), shift.getStartTime(), shift.getEndTime(), shiftHours));
+            }
+        }
+        
+        if (!validationErrors.isEmpty()) {
+            throw new InfeasibleSolutionException("Shift optimization cannot proceed due to invalid constraints.", validationErrors);
+        }
+
         CpModel model = new CpModel();
         
         BoolVar[][] x = new BoolVar[workers.size()][shifts.size()];

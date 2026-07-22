@@ -15,7 +15,7 @@ export const ShiftAssignmentsView = () => {
   const [assignments, setAssignments] = useState<ShiftAssignment[]>([]);
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | string[] | null>(null);
   
   const [resultStats, setResultStats] = useState<{cost: number, time: number} | null>(null);
 
@@ -82,7 +82,11 @@ export const ShiftAssignmentsView = () => {
       });
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response?.status === 422) {
-        setError(err.response.data.message || "Optimization failed: Constraints could not be satisfied.");
+        if (err.response.data.details && err.response.data.details.length > 0) {
+            setError(err.response.data.details);
+        } else {
+            setError(err.response.data.message || "Optimization failed: Constraints could not be satisfied.");
+        }
       } else {
         setError("An unexpected error occurred during optimization.");
       }
@@ -190,7 +194,15 @@ export const ShiftAssignmentsView = () => {
       {error && !isWorkerModalOpen && !isShiftModalOpen && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-          <p className="text-red-700 text-sm font-medium">{error}</p>
+          <div className="text-red-700 text-sm font-medium">
+             {Array.isArray(error) ? (
+                <ul className="list-disc pl-4 space-y-1">
+                   {error.map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+             ) : (
+                <p>{error}</p>
+             )}
+          </div>
         </div>
       )}
 
@@ -340,7 +352,15 @@ export const ShiftAssignmentsView = () => {
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-              <p className="text-red-700 text-sm font-medium">{error}</p>
+              <div className="text-red-700 text-sm font-medium">
+                 {Array.isArray(error) ? (
+                    <ul className="list-disc pl-4 space-y-1">
+                       {error.map((err, i) => <li key={i}>{err}</li>)}
+                    </ul>
+                 ) : (
+                    <p>{error}</p>
+                 )}
+              </div>
             </div>
           )}
           <div>
@@ -375,7 +395,15 @@ export const ShiftAssignmentsView = () => {
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-              <p className="text-red-700 text-sm font-medium">{error}</p>
+              <div className="text-red-700 text-sm font-medium">
+                 {Array.isArray(error) ? (
+                    <ul className="list-disc pl-4 space-y-1">
+                       {error.map((err, i) => <li key={i}>{err}</li>)}
+                    </ul>
+                 ) : (
+                    <p>{error}</p>
+                 )}
+              </div>
             </div>
           )}
           <div>

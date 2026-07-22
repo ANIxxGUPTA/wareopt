@@ -28,6 +28,41 @@ public class DeliverySlotOptimizer {
     public List<SlotAssignment> optimize(List<DeliveryOrder> orders, List<DeliverySlot> slots) {
         if (orders.isEmpty()) return new ArrayList<>();
 
+        List<String> validationErrors = new ArrayList<>();
+        
+        long totalCapacity = slots.stream().mapToLong(s -> (long)(s.getMaxCapacityKg().doubleValue() * 1000)).sum();
+        long totalWeight = orders.stream().mapToLong(o -> (long)(o.getWeightKg().doubleValue() * 1000)).sum();
+        
+        if (totalWeight > totalCapacity) {
+            validationErrors.add(String.format("Total weight of all orders (%.1f kg) exceeds the total capacity of all available slots (%.1f kg).", 
+                totalWeight / 1000.0, totalCapacity / 1000.0));
+        }
+
+        for (DeliveryOrder order : orders) {
+            long eligibleSlotsCount = slots.stream()
+                .filter(s -> !s.getEndTime().isAfter(order.getDeadline()))
+                .count();
+                
+            if (eligibleSlotsCount == 0) {
+                validationErrors.add(String.format("Order at %.4f, %.4f has deadline %s which is before every delivery slot's end time — this order can never be delivered.",
+                    order.getDestinationLat(), order.getDestinationLng(), order.getDeadline()));
+            } else {
+                long orderWeight = (long)(order.getWeightKg().doubleValue() * 1000);
+                boolean fitsInAnyEligible = slots.stream()
+                    .filter(s -> !s.getEndTime().isAfter(order.getDeadline()))
+                    .anyMatch(s -> (long)(s.getMaxCapacityKg().doubleValue() * 1000) >= orderWeight);
+                    
+                if (!fitsInAnyEligible) {
+                    validationErrors.add(String.format("Order at %.4f, %.4f weighs %.1f kg, which exceeds the capacity of all delivery slots it is eligible for.",
+                        order.getDestinationLat(), order.getDestinationLng(), order.getWeightKg()));
+                }
+            }
+        }
+        
+        if (!validationErrors.isEmpty()) {
+            throw new InfeasibleSolutionException("Delivery optimization cannot proceed due to invalid constraints.", validationErrors);
+        }
+
         CpModel model = new CpModel();
         
         BoolVar[][] y = new BoolVar[orders.size()][slots.size()];
