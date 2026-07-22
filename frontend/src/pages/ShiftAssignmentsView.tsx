@@ -23,6 +23,7 @@ export const ShiftAssignmentsView = () => {
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<Partial<Worker> | null>(null);
+  const [skillsInput, setSkillsInput] = useState("");
   const [editingShift, setEditingShift] = useState<Partial<Shift> | null>(null);
 
   useEffect(() => {
@@ -67,10 +68,13 @@ export const ShiftAssignmentsView = () => {
     e.preventDefault();
     setError(null);
     try {
-      if (editingWorker?.id) {
-        await updateWorker(editingWorker.id, editingWorker);
+      const parsedSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
+      const workerToSave = { ...editingWorker, skills: parsedSkills };
+      
+      if (workerToSave.id) {
+        await updateWorker(workerToSave.id, workerToSave);
       } else {
-        await createWorker(editingWorker!);
+        await createWorker(workerToSave as Worker);
       }
       setIsWorkerModalOpen(false);
       fetchData();
@@ -160,7 +164,7 @@ export const ShiftAssignmentsView = () => {
 
       {activeTab === 'workers' && (
         <div className="space-y-4">
-          <button onClick={() => { setEditingWorker({ skills: [] }); setIsWorkerModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+          <button onClick={() => { setEditingWorker({}); setSkillsInput(""); setIsWorkerModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
             <Plus className="w-4 h-4" /> Add Worker
           </button>
           <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
@@ -182,7 +186,7 @@ export const ShiftAssignmentsView = () => {
                     <td className="px-6 py-4 text-sm text-gray-500">{w.maxHoursPerWeek}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{w.skills?.join(', ')}</td>
                     <td className="px-6 py-4 text-sm text-right flex justify-end gap-2">
-                      <button onClick={() => { setEditingWorker(w); setIsWorkerModalOpen(true); }} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4"/></button>
+                      <button onClick={() => { setEditingWorker(w); setSkillsInput(w.skills?.join(', ') || ""); setIsWorkerModalOpen(true); }} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4"/></button>
                       <button onClick={() => handleDeleteWorker(w.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
                     </td>
                   </tr>
@@ -317,7 +321,7 @@ export const ShiftAssignmentsView = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Skills (comma-separated)</label>
-            <input required type="text" value={editingWorker?.skills?.join(', ') || ''} onChange={e => setEditingWorker({...editingWorker, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking, packing" />
+            <input required type="text" value={skillsInput} onChange={e => setSkillsInput(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. picking, packing" />
           </div>
           <button type="submit" className="w-full bg-blue-600 text-white rounded-md py-2 font-medium hover:bg-blue-700">Save Worker</button>
         </form>

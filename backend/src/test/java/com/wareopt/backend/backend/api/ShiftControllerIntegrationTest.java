@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wareopt.backend.backend.entity.Shift;
 import com.wareopt.backend.backend.exception.GlobalExceptionHandler;
 import com.wareopt.backend.backend.repository.ShiftRepository;
+import com.wareopt.backend.backend.repository.ShiftAssignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,9 @@ class ShiftControllerIntegrationTest {
 
     @Mock
     private ShiftRepository shiftRepository;
+
+    @Mock
+    private ShiftAssignmentRepository shiftAssignmentRepository;
 
     @InjectMocks
     private ShiftController shiftController;

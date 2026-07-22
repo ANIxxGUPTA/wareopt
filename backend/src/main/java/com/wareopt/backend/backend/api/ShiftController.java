@@ -75,6 +75,7 @@ public class ShiftController {
         if (!shiftRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shift not found");
         }
+        shiftAssignmentRepository.deleteByShiftId(id);
         shiftRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

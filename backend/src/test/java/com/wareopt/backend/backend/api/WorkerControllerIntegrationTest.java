@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wareopt.backend.backend.entity.Worker;
 import com.wareopt.backend.backend.exception.GlobalExceptionHandler;
 import com.wareopt.backend.backend.repository.WorkerRepository;
+import com.wareopt.backend.backend.repository.ShiftAssignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,9 @@ class WorkerControllerIntegrationTest {
 
     @Mock
     private WorkerRepository workerRepository;
+
+    @Mock
+    private ShiftAssignmentRepository shiftAssignmentRepository;
 
     @InjectMocks
     private WorkerController workerController;

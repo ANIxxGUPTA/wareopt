@@ -69,6 +69,7 @@ public class DeliveryController {
         if (!deliveryOrderRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
         }
+        slotAssignmentRepository.deleteByOrderId(id);
         deliveryOrderRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -113,6 +114,7 @@ public class DeliveryController {
         if (!deliverySlotRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Slot not found");
         }
+        slotAssignmentRepository.deleteBySlotId(id);
         deliverySlotRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

@@ -2,6 +2,7 @@ package com.wareopt.backend.backend.api;
 
 import com.wareopt.backend.backend.entity.Worker;
 import com.wareopt.backend.backend.repository.WorkerRepository;
+import com.wareopt.backend.backend.repository.ShiftAssignmentRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,9 @@ public class WorkerController {
 
     @Autowired
     private WorkerRepository workerRepository;
+
+    @Autowired
+    private ShiftAssignmentRepository shiftAssignmentRepository;
 
     @GetMapping
     public List<Worker> getAllWorkers() {
@@ -49,6 +53,7 @@ public class WorkerController {
         if (!workerRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Worker not found");
         }
+        shiftAssignmentRepository.deleteByWorkerId(id);
         workerRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

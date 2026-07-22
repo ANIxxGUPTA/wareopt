@@ -5,8 +5,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wareopt.backend.backend.entity.DeliveryOrder;
 import com.wareopt.backend.backend.entity.DeliverySlot;
 import com.wareopt.backend.backend.exception.GlobalExceptionHandler;
+import com.wareopt.backend.backend.optimization.DeliverySlotOptimizer;
 import com.wareopt.backend.backend.repository.DeliveryOrderRepository;
 import com.wareopt.backend.backend.repository.DeliverySlotRepository;
+import com.wareopt.backend.backend.repository.SlotAssignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +38,12 @@ class DeliveryControllerIntegrationTest {
 
     @Mock
     private DeliverySlotRepository deliverySlotRepository;
+
+    @Mock
+    private SlotAssignmentRepository slotAssignmentRepository;
+
+    @Mock
+    private DeliverySlotOptimizer deliverySlotOptimizer;
 
     @InjectMocks
     private DeliveryController deliveryController;
