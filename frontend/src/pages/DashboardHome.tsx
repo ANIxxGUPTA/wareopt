@@ -77,23 +77,46 @@ export const DashboardHome = () => {
         })}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="flex gap-4">
-          <button
-            onClick={() => navigate('/shifts')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            Manage Shift Optimization
-          </button>
-          <button
-            onClick={() => navigate('/deliveries')}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 transition-colors shadow-sm"
-          >
-            Manage Delivery Routing
-          </button>
+      {counts.workers === 0 && counts.shifts === 0 && counts.orders === 0 && counts.slots === 0 ? (
+        <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200 p-8 text-center">
+          <h3 className="text-xl font-bold text-blue-900 mb-2">No data yet!</h3>
+          <p className="text-blue-700 mb-6 max-w-lg mx-auto">
+            Your database is currently empty. Add your workers and shifts to get started with schedule optimization, or add delivery orders to optimize routing.
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => navigate('/shifts', { state: { tab: 'workers' } })}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              Add Workers
+            </button>
+            <button
+              onClick={() => navigate('/shifts', { state: { tab: 'shifts' } })}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+            >
+              Add Shifts
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/shifts')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              Manage Shift Optimization
+            </button>
+            <button
+              onClick={() => navigate('/deliveries')}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+            >
+              Manage Delivery Routing
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-8 mt-8">
         <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">

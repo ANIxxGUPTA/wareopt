@@ -3,10 +3,13 @@ import { getShifts, optimizeShifts, getWorkers, createWorker, updateWorker, dele
 import type { Shift, ShiftAssignment, Worker } from '../services/api';
 import { AlertCircle, Loader2, Play, Plus, Edit2, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { Modal } from '../components/Modal';
 
 export const ShiftAssignmentsView = () => {
-  const [activeTab, setActiveTab] = useState<'optimize' | 'workers' | 'shifts'>('optimize');
+  const location = useLocation();
+  const initialTab = location.state?.tab || 'optimize';
+  const [activeTab, setActiveTab] = useState<'optimize' | 'workers' | 'shifts'>(initialTab);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [assignments, setAssignments] = useState<ShiftAssignment[]>([]);
