@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Users, Calendar, Truck, Box, RotateCcw, AlertCircle, Loader2, AlertTriangle } from 'lucide-react';
-import { getWorkers, getShifts, getDeliveryOrders, getDeliverySlots, resetDatabase, getLowStockInventory } from '../services/api';
+import { Users, Calendar, Truck, Box, RotateCcw, AlertCircle, Loader2, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
+import { getWorkers, getShifts, getDeliveryOrders, getDeliverySlots, resetDatabase, getLowStockInventory, getInventory } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 export const DashboardHome = () => {
-  const [counts, setCounts] = useState({ workers: 0, shifts: 0, orders: 0, slots: 0, lowStock: 0 });
+  const [counts, setCounts] = useState({ workers: 0, shifts: 0, orders: 0, slots: 0, lowStock: 0, inventoryItems: 0 });
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchCounts = () => {
-    Promise.all([getWorkers(), getShifts(), getDeliveryOrders(), getDeliverySlots(), getLowStockInventory()]).then(
-      ([resWorkers, resShifts, resOrders, resSlots, resLowStock]) => {
+    Promise.all([getWorkers(), getShifts(), getDeliveryOrders(), getDeliverySlots(), getLowStockInventory(), getInventory()]).then(
+      ([resWorkers, resShifts, resOrders, resSlots, resLowStock, resInventory]) => {
         setCounts({
           workers: resWorkers.data.length,
           shifts: resShifts.data.length,
           orders: resOrders.data.length,
           slots: resSlots.data.length,
           lowStock: resLowStock.data.length,
+          inventoryItems: resInventory.data.length,
         });
       }
     ).catch(err => {
@@ -55,14 +56,24 @@ export const DashboardHome = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* A. Intro/Explainer Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to WareOpt</h2>
+        <p className="text-gray-600 max-w-3xl">
+          WareOpt is your all-in-one operations tool for managing warehouse logistics. Optimize your worker shift scheduling, handle delivery routing and slot assignments, and track your inventory seamlessly from this central hub.
+        </p>
+      </div>
+
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-500" />
           <p className="text-red-700 text-sm font-medium">{error}</p>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      {/* B. Existing Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -79,31 +90,87 @@ export const DashboardHome = () => {
         })}
       </div>
 
-      {counts.workers === 0 && counts.shifts === 0 && counts.orders === 0 && counts.slots === 0 ? (
-        <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200 p-8 text-center">
-          <h3 className="text-xl font-bold text-blue-900 mb-2">No data yet!</h3>
-          <p className="text-blue-700 mb-6 max-w-lg mx-auto">
-            Your database is currently empty. Add your workers and shifts to get started with schedule optimization, or add delivery orders to optimize routing.
-          </p>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() => navigate('/shifts', { state: { tab: 'workers' } })}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* C. "How It Works" / Module Explainer Section */}
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-lg font-bold text-gray-900">How It Works</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div 
+              onClick={() => navigate('/shifts')}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group"
             >
-              Add Workers
-            </button>
-            <button
-              onClick={() => navigate('/shifts', { state: { tab: 'shifts' } })}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h4 className="font-semibold text-gray-900">Shift Assignments</h4>
+              </div>
+              <p className="text-sm text-gray-600">
+                Manage your worker roster, define shift requirements, and run an optimizer to auto-assign workers to shifts based on skills, cost, and availability.
+              </p>
+            </div>
+
+            <div 
+              onClick={() => navigate('/deliveries')}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group"
             >
-              Add Shifts
-            </button>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-md group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <h4 className="font-semibold text-gray-900">Delivery Slots</h4>
+              </div>
+              <p className="text-sm text-gray-600">
+                Set up delivery time windows and vehicle capacity, then optimize order-to-slot assignments based on deadlines and weight.
+              </p>
+            </div>
+
+            <div 
+              onClick={() => navigate('/inventory')}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:border-amber-400 hover:shadow-md transition-all group md:col-span-2"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-amber-100 text-amber-600 rounded-md group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  <Box className="w-5 h-5" />
+                </div>
+                <h4 className="font-semibold text-gray-900">Inventory Management</h4>
+              </div>
+              <p className="text-sm text-gray-600">
+                Track stock levels, get low-stock alerts, and see a full audit history of every quantity change. Link your items directly to outgoing delivery orders.
+              </p>
+            </div>
           </div>
         </div>
-      ) : (
+
+        {/* D. Getting Started Checklist */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Getting Started</h3>
+          <ul className="space-y-4">
+            <li className="flex items-start gap-3">
+              {counts.workers > 0 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> : <Circle className="w-5 h-5 text-gray-300 shrink-0 mt-0.5" />}
+              <span className={`text-sm ${counts.workers > 0 ? 'text-gray-900' : 'text-gray-500'}`}>Add your first worker</span>
+            </li>
+            <li className="flex items-start gap-3">
+              {counts.shifts > 0 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> : <Circle className="w-5 h-5 text-gray-300 shrink-0 mt-0.5" />}
+              <span className={`text-sm ${counts.shifts > 0 ? 'text-gray-900' : 'text-gray-500'}`}>Create a shift</span>
+            </li>
+            <li className="flex items-start gap-3">
+              {counts.workers > 0 && counts.shifts > 0 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> : <Circle className="w-5 h-5 text-gray-300 shrink-0 mt-0.5" />}
+              <span className={`text-sm ${counts.workers > 0 && counts.shifts > 0 ? 'text-gray-900' : 'text-gray-500'}`}>Run optimization</span>
+            </li>
+            <li className="flex items-start gap-3">
+              {counts.inventoryItems > 0 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> : <Circle className="w-5 h-5 text-gray-300 shrink-0 mt-0.5" />}
+              <span className={`text-sm ${counts.inventoryItems > 0 ? 'text-gray-900' : 'text-gray-500'}`}>Add inventory items</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* E. Quick Actions & Danger Zone */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <button
               onClick={() => navigate('/shifts')}
               className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm"
@@ -118,23 +185,23 @@ export const DashboardHome = () => {
             </button>
           </div>
         </div>
-      )}
-      
-      <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-8 mt-8">
-        <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" /> Danger Zone
-        </h3>
-        <p className="text-sm text-red-700 mb-4">
-          Completely wipe all workers, shifts, delivery orders, slots, and assignments from the database to start fresh.
-        </p>
-        <button
-          onClick={handleReset}
-          disabled={resetting}
-          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
-        >
-          {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-          Reset All Data
-        </button>
+
+        <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-8">
+          <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" /> Danger Zone
+          </h3>
+          <p className="text-sm text-red-700 mb-4">
+            Completely wipe all workers, shifts, delivery orders, slots, and assignments from the database to start fresh.
+          </p>
+          <button
+            onClick={handleReset}
+            disabled={resetting}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+          >
+            {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+            Reset All Data
+          </button>
+        </div>
       </div>
     </div>
   );
