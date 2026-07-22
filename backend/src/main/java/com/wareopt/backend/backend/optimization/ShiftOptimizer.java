@@ -41,7 +41,9 @@ public class ShiftOptimizer {
             .collect(Collectors.toSet());
             
         Set<String> workerSkills = worker.getSkills().stream()
+            .flatMap(s -> Arrays.stream(s.split(",")))
             .map(String::trim)
+            .filter(s -> !s.isEmpty())
             .collect(Collectors.toSet());
             
         return workerSkills.containsAll(required);

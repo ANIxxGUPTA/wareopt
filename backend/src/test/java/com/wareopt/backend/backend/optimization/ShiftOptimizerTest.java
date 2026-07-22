@@ -112,4 +112,28 @@ class ShiftOptimizerTest {
             optimizer.optimize(List.of(w2), List.of(s1));
         });
     }
+
+    @Test
+    void testCommaSeparatedStringInArrayMatching() {
+        // Worker with single string "picking, packing" in array
+        Worker w1 = new Worker();
+        w1.setId(1L);
+        w1.setHourlyCost(BigDecimal.valueOf(15));
+        w1.setMaxHoursPerWeek(40);
+        w1.setSkills(List.of("picking, packing")); // Note: single string
+
+        // Shift requires BOTH picking and packing
+        Shift s1 = new Shift();
+        s1.setId(1L);
+        s1.setStartTime(LocalTime.of(8, 0));
+        s1.setEndTime(LocalTime.of(16, 0));
+        s1.setRequiredWorkerCount(1);
+        s1.setRequiredSkill("picking, packing");
+
+        // w1 should be feasible
+        List<ShiftAssignment> assignments = optimizer.optimize(List.of(w1), List.of(s1));
+        assertFalse(assignments.isEmpty());
+        assertEquals(1, assignments.size());
+        assertEquals(1L, assignments.get(0).getWorker().getId());
+    }
 }
