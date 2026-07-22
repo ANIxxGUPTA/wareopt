@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class DeliverySlotOptimizer {
                 totalWeight / 1000.0, totalCapacity / 1000.0));
         }
 
+        DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         for (DeliveryOrder order : orders) {
             long eligibleSlotsCount = slots.stream()
                 .filter(s -> !s.getEndTime().isAfter(order.getDeadline()))
@@ -45,7 +47,7 @@ public class DeliverySlotOptimizer {
                 
             if (eligibleSlotsCount == 0) {
                 validationErrors.add(String.format("Order at %.4f, %.4f has deadline %s which is before every delivery slot's end time — this order can never be delivered.",
-                    order.getDestinationLat(), order.getDestinationLng(), order.getDeadline()));
+                    order.getDestinationLat(), order.getDestinationLng(), order.getDeadline().format(dtFormatter)));
             } else {
                 long orderWeight = (long)(order.getWeightKg().doubleValue() * 1000);
                 boolean fitsInAnyEligible = slots.stream()
