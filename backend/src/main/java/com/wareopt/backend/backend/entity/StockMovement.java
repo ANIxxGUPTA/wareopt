@@ -11,8 +11,9 @@ public class StockMovement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long inventoryItemId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_item_id", nullable = false)
+    private InventoryItem inventoryItem;
 
     @Column(nullable = false)
     private int changeAmount;
@@ -43,12 +44,12 @@ public class StockMovement {
         this.id = id;
     }
 
-    public Long getInventoryItemId() {
-        return inventoryItemId;
+    public InventoryItem getInventoryItem() {
+        return inventoryItem;
     }
 
-    public void setInventoryItemId(Long inventoryItemId) {
-        this.inventoryItemId = inventoryItemId;
+    public void setInventoryItem(InventoryItem inventoryItem) {
+        this.inventoryItem = inventoryItem;
     }
 
     public int getChangeAmount() {

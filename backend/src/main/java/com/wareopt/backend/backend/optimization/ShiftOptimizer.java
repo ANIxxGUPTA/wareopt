@@ -135,7 +135,8 @@ public class ShiftOptimizer {
             throw new InfeasibleSolutionException("Shift optimization cannot proceed due to invalid constraints.", validationErrors);
         }
 
-        CpModel model = new CpModel();
+        try {
+            CpModel model = new CpModel();
         
         BoolVar[][] x = new BoolVar[workers.size()][shifts.size()];
 
@@ -241,20 +242,26 @@ public class ShiftOptimizer {
             throw new InfeasibleSolutionException("Shift optimization is INFEASIBLE. Not enough eligible workers to cover shifts or hours limit exceeded.");
         }
 
-        List<ShiftAssignment> assignments = new ArrayList<>();
-        if (status == CpSolverStatus.OPTIMAL || status == CpSolverStatus.FEASIBLE) {
-            for (int w = 0; w < workers.size(); w++) {
-                for (int s = 0; s < shifts.size(); s++) {
-                    if (x[w][s] != null && solver.value(x[w][s]) == 1) {
-                        ShiftAssignment assignment = new ShiftAssignment();
-                        assignment.setWorker(workers.get(w));
-                        assignment.setShift(shifts.get(s));
-                        assignment.setAssignedAt(LocalDateTime.now());
-                        assignments.add(assignment);
+            List<ShiftAssignment> assignments = new ArrayList<>();
+            if (status == CpSolverStatus.OPTIMAL || status == CpSolverStatus.FEASIBLE) {
+                for (int w = 0; w < workers.size(); w++) {
+                    for (int s = 0; s < shifts.size(); s++) {
+                        if (x[w][s] != null && solver.value(x[w][s]) == 1) {
+                            ShiftAssignment assignment = new ShiftAssignment();
+                            assignment.setWorker(workers.get(w));
+                            assignment.setShift(shifts.get(s));
+                            assignment.setAssignedAt(LocalDateTime.now());
+                            assignments.add(assignment);
+                        }
                     }
                 }
             }
+            return assignments;
+        } catch (InfeasibleSolutionException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("OR-Tools solver threw an exception: ", e);
+            throw new InfeasibleSolutionException("Shift optimization failed due to contradictory constraints.");
         }
-        return assignments;
     }
 }

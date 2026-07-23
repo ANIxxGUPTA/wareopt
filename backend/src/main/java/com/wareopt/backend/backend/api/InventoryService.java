@@ -29,7 +29,7 @@ public class InventoryService {
     public List<StockMovement> getInventoryItemHistory(Long inventoryItemId) {
         // Optionally verify if item exists
         getInventoryItemById(inventoryItemId);
-        return stockMovementRepository.findByInventoryItemIdOrderByTimestampDesc(inventoryItemId);
+        return stockMovementRepository.findByInventoryItem_IdOrderByTimestampDesc(inventoryItemId);
     }
 
     public List<InventoryItem> getLowStockItems() {
@@ -55,7 +55,7 @@ public class InventoryService {
         
         if (savedItem.getQuantityOnHand() > 0) {
             StockMovement movement = new StockMovement();
-            movement.setInventoryItemId(savedItem.getId());
+            movement.setInventoryItem(savedItem);
             movement.setChangeAmount(savedItem.getQuantityOnHand());
             movement.setReason(MovementReason.RESTOCK);
             movement.setNote("Initial stock on creation");
@@ -100,7 +100,7 @@ public class InventoryService {
         InventoryItem savedItem = inventoryItemRepository.save(item);
 
         StockMovement movement = new StockMovement();
-        movement.setInventoryItemId(savedItem.getId());
+        movement.setInventoryItem(savedItem);
         movement.setChangeAmount(request.getChangeAmount());
         movement.setReason(request.getReason());
         movement.setNote(request.getNote());

@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "inventory_items")
@@ -43,6 +45,9 @@ public class InventoryItem {
     private LocalDateTime createdAt;
 
     private LocalDateTime lastUpdated;
+
+    @OneToMany(mappedBy = "inventoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StockMovement> stockMovements = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -135,5 +140,13 @@ public class InventoryItem {
 
     public LocalDateTime getLastUpdated() {
         return lastUpdated;
+    }
+
+    public List<StockMovement> getStockMovements() {
+        return stockMovements;
+    }
+
+    public void setStockMovements(List<StockMovement> stockMovements) {
+        this.stockMovements = stockMovements;
     }
 }
