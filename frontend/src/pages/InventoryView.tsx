@@ -204,7 +204,7 @@ export const InventoryView = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty / Unit</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reorder Thresh</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
@@ -220,7 +220,7 @@ export const InventoryView = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={isLowStock ? "font-semibold text-orange-600" : "text-gray-500"}>
-                        {item.quantityOnHand}
+                        {item.quantityOnHand} {item.unit}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{item.warehouseLocation || '-'}</td>
@@ -285,9 +285,16 @@ export const InventoryView = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Unit (e.g. kg, units)</label>
-              <input type="text" value={editingItem?.unit || ''} onChange={e => setEditingItem({...editingItem, unit: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="units" />
+              <label className="block text-sm font-medium text-gray-700">Unit of Measure (e.g. kg, box)</label>
+              <input type="text" value={editingItem?.unit || ''} onChange={e => setEditingItem({...editingItem, unit: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. kg" />
             </div>
+            {!editingItem?.id && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Initial Quantity</label>
+                <input disabled type="text" value="0" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50 text-gray-500" />
+                <p className="mt-1 text-xs text-gray-500">Use "Stock In" to add stock later.</p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4">
