@@ -100,6 +100,11 @@ export const exportCsv = async () => {
 };
 
 
+export const logStockMovement = async (id: number, request: { changeAmount: number, reason: string, date?: string, note?: string }) => {
+  const response = await api.post<InventoryItem>(`/inventory/${id}/log-movement`, request);
+  return response.data;
+};
+
 export const getInventoryItemHistory = (id: number) => api.get<StockMovement[]>(`/inventory/${id}/history`);
 
 export const resetDatabase = () => api.delete('/reset');

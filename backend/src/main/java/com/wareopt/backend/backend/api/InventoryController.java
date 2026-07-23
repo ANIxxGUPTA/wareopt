@@ -62,4 +62,10 @@ public class InventoryController {
         inventoryService.exportCsv(response.getWriter());
     }
 
+    @PostMapping("/{id:\\d+}/log-movement")
+    public ResponseEntity<InventoryItem> logStockMovement(@PathVariable Long id, @Valid @RequestBody com.wareopt.backend.backend.api.dto.StockMovementRequest request) {
+        InventoryItem updatedItem = inventoryService.logStockMovement(id, request);
+        return ResponseEntity.ok(updatedItem);
+    }
+
 }

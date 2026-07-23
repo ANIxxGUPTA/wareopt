@@ -66,39 +66,54 @@ public class InventoryService {
     }
 
     public InventoryItem updateInventoryItem(Long id, InventoryItem itemDetails) {
-        if (itemDetails.getQuantityOnHand() == null || itemDetails.getQuantityOnHand() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity on hand cannot be negative");
-        }
         if (inventoryItemRepository.existsBySkuAndIdNot(itemDetails.getSku(), id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An inventory item with this SKU already exists");
         }
 
         InventoryItem item = getInventoryItemById(id);
-        int oldQuantity = item.getQuantityOnHand();
 
         item.setSku(itemDetails.getSku());
         item.setName(itemDetails.getName());
         item.setDescription(itemDetails.getDescription());
-        item.setQuantityOnHand(itemDetails.getQuantityOnHand());
         item.setUnit(itemDetails.getUnit());
         item.setWarehouseLocation(itemDetails.getWarehouseLocation());
         item.setReorderThreshold(itemDetails.getReorderThreshold());
         item.setCostPerUnit(itemDetails.getCostPerUnit());
 
-        InventoryItem savedItem = inventoryItemRepository.save(item);
-
-        if (oldQuantity != itemDetails.getQuantityOnHand()) {
-            StockMovement movement = new StockMovement();
-            movement.setInventoryItemId(savedItem.getId());
-            movement.setChangeAmount(itemDetails.getQuantityOnHand() - oldQuantity);
-            movement.setReason(MovementReason.MANUAL_ADJUSTMENT);
-            movement.setNote("Manual adjustment via UI");
-            stockMovementRepository.save(movement);
-        }
-
-        return savedItem;
+        return inventoryItemRepository.save(item);
     }
 
+    @org.springframework.transaction.annotation.Transactional
+    public InventoryItem logStockMovement(Long id, com.wareopt.backend.backend.api.dto.StockMovementRequest request) {
+        InventoryItem item = getInventoryItemById(id);
+        
+        if (request.getChangeAmount() == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Change amount cannot be zero");
+        }
+
+        int newQuantity = item.getQuantityOnHand() + request.getChangeAmount();
+        if (newQuantity < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient stock: cannot reduce quantity below zero");
+        }
+
+        item.setQuantityOnHand(newQuantity);
+        InventoryItem savedItem = inventoryItemRepository.save(item);
+
+        StockMovement movement = new StockMovement();
+        movement.setInventoryItemId(savedItem.getId());
+        movement.setChangeAmount(request.getChangeAmount());
+        movement.setReason(request.getReason());
+        movement.setNote(request.getNote());
+        if (request.getDate() != null) {
+            // Using start of day for the date provided
+            movement.setTimestamp(request.getDate().atStartOfDay());
+        } else {
+            movement.setTimestamp(java.time.LocalDateTime.now());
+        }
+        
+        stockMovementRepository.save(movement);
+        return savedItem;
+    }
     public void deleteInventoryItem(Long id) {
         if (!inventoryItemRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory item not found");
