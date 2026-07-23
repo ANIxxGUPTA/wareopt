@@ -38,7 +38,7 @@ async function verify() {
          requiredWorkerCount: 10, requiredSkill: 'Unicorn'
       })
     });
-    let optRes = await fetch(`${BASE_URL}/api/optimization/run`, { method: 'POST' });
+    let optRes = await fetch(`${BASE_URL}/api/optimize/shifts`, { method: 'POST' });
     console.log(`Optimization Response Status: ${optRes.status}`);
     if (optRes.status === 422) {
        let body = await optRes.json();

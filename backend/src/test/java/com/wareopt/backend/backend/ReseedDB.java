@@ -19,7 +19,7 @@ public class ReseedDB {
              Statement stmt = conn.createStatement()) {
             
             System.out.println("Truncating all tables...");
-            stmt.execute("TRUNCATE TABLE workers, shifts, shift_assignments RESTART IDENTITY CASCADE;");
+            stmt.execute("TRUNCATE TABLE workers, shifts, shift_assignments, stock_movements RESTART IDENTITY CASCADE;");
             
             System.out.println("Reading new SQL file...");
             String sql = new String(Files.readAllBytes(Paths.get("../db/999_seed.sql")));
