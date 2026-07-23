@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory, getInventoryItemHistory } from '../services/api';
+import { useEffect, useState, useRef } from 'react';
+import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory, getInventoryItemHistory, exportCsv, importCsv } from '../services/api';
 import type { InventoryItem, StockMovement } from '../services/api';
 import { AlertCircle, Edit2, Plus, Trash2, AlertTriangle, History } from 'lucide-react';
 import { Modal } from '../components/Modal';
@@ -12,6 +12,7 @@ export const InventoryView = () => {
   const [editingItem, setEditingItem] = useState<Partial<InventoryItem>>({});
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyItems, setHistoryItems] = useState<StockMovement[]>([]);
@@ -55,7 +56,7 @@ export const InventoryView = () => {
       if (editingItem.id) {
         await updateInventoryItem(editingItem.id, editingItem);
       } else {
-        await createInventoryItem(editingItem);
+        await createInventoryItem(editingItem as Omit<InventoryItem, 'id' | 'createdAt' | 'lastUpdated'>);
       }
       setIsModalOpen(false);
       await fetchData();
@@ -82,8 +83,8 @@ export const InventoryView = () => {
 
   const handleExport = async () => {
     try {
-      const res = await exportInventoryCsv();
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const res = await exportCsv();
+      const url = window.URL.createObjectURL(new Blob([res]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'inventory_export.csv');
@@ -99,11 +100,16 @@ export const InventoryView = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       try {
-        await importInventoryCsv(file);
+        await importCsv(file);
         alert('Import successful!');
         fetchData();
       } catch (err: any) {
-        setError('Failed to import CSV');
+        if (err.errors) {
+          const errorMsg = err.errors.map((e: any) => `Row ${e.row}: ${e.error}`).join('\n');
+          alert(`Import failed:\n${errorMsg}`);
+        } else {
+          setError('Failed to import CSV');
+        }
       } finally {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -134,6 +140,27 @@ export const InventoryView = () => {
         <div>
           <h2 className="text-xl font-bold text-gray-900">Inventory Management</h2>
           <p className="text-sm text-gray-500">Manage warehouse stock, locations, and reorder levels.</p>
+        </div>
+        <div className="space-x-4">
+          <input 
+            type="file" 
+            accept=".csv" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleImport} 
+          />
+          <button 
+            className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Import CSV
+          </button>
+          <button 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition"
+            onClick={handleExport}
+          >
+            Export CSV
+          </button>
         </div>
       </div>
 
