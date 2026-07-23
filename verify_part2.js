@@ -12,10 +12,13 @@ async function verify() {
     // 2. Duplicate worker check (requires a unique constraint on something, wait, does Worker have a unique constraint?)
     // Actually, Worker has a name and cost. Let's create one.
     console.log("2. Testing duplicate worker...");
-    let w1 = await fetch(`${BASE_URL}/api/workers`, {
+    console.log("2. Testing duplicate worker...");
+    let createRes = await fetch(`${BASE_URL}/api/workers`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Alice', cost: 10, skills: ['Forklift'] })
-    }).then(r => r.json());
+      body: JSON.stringify({ name: 'Alice', hourlyCost: 10, maxHoursPerWeek: 40, skills: ['Forklift'] })
+    });
+    let w1 = await createRes.json();
+    console.log("Worker creation response:", w1);
     
     // Wait, is there a unique constraint on Worker name? Let's assume yes or maybe not.
     // I can't remember. Let's just create a duplicate and check if it throws 409.

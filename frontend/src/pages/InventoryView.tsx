@@ -204,7 +204,7 @@ export const InventoryView = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty / Unit</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reorder Thresh</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
@@ -220,7 +220,7 @@ export const InventoryView = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={isLowStock ? "font-semibold text-orange-600" : "text-gray-500"}>
-                        {item.quantityOnHand} {item.unit}
+                        {item.quantityOnHand}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{item.warehouseLocation || '-'}</td>
@@ -269,7 +269,8 @@ export const InventoryView = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">SKU</label>
-              <input required type="text" value={editingItem?.sku || ''} onChange={e => setEditingItem({...editingItem, sku: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. WH-101" />
+              <input required type="text" value={editingItem?.sku || ''} onChange={e => setEditingItem({...editingItem, sku: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. SKU-001 (unique product code)" />
+              <p className="mt-1 text-xs text-gray-500">A unique code to identify this item (letters/numbers).</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
