@@ -61,26 +61,4 @@ public class InventoryController {
         response.setHeader("Content-Disposition", "attachment; filename=\"inventory_export.csv\"");
         inventoryService.exportCsv(response.getWriter());
     }
-
-    @PostMapping("/import")
-    public ResponseEntity<com.wareopt.backend.backend.api.dto.CsvImportResult> importInventory(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        com.wareopt.backend.backend.api.dto.CsvImportResult result = new com.wareopt.backend.backend.api.dto.CsvImportResult();
-        if (file.isEmpty()) {
-            result.setStatus(400);
-            result.setMessage("File is empty");
-            return ResponseEntity.badRequest().body(result);
-        }
-        
-        try {
-            inventoryService.importCsv(file.getInputStream(), result);
-            return ResponseEntity.ok(result);
-        } catch (org.springframework.web.server.ResponseStatusException e) {
-            // Return the result object which contains the detailed row errors
-            return ResponseEntity.status(e.getStatusCode()).body(result);
-        } catch (java.io.IOException e) {
-            result.setStatus(500);
-            result.setMessage("Error reading file");
-            return ResponseEntity.internalServerError().body(result);
-        }
-    }
 }
