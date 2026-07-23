@@ -192,10 +192,12 @@ export const ShiftAssignmentsView = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (error && (isWorkerModalOpen || isShiftModalOpen)) setError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingWorker, editingShift, skillsInput]);
 
   const fetchData = async () => {

@@ -30,6 +30,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    @SuppressWarnings("deprecation")
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiError> handleResponseStatusException(ResponseStatusException ex) {
         ApiError error = new ApiError(ex.getStatusCode().value(), ex.getReason(), null);

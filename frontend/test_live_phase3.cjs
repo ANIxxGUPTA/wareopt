@@ -2,9 +2,7 @@ const axios = require('axios');
 
 const BASE_URL = 'https://wareopt-backend.onrender.com/api';
 
-async function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+
 
 async function runTest() {
     console.log("=== STARTING LIVE VERIFICATION ===\\n");

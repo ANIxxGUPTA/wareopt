@@ -75,7 +75,7 @@ export const InventoryView = () => {
     try {
       await deleteInventoryItem(id);
       fetchData();
-    } catch (err: any) {
+    } catch {
       setError("Failed to delete item.");
     }
   };
@@ -90,7 +90,7 @@ export const InventoryView = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (err) {
+    } catch {
       setError('Failed to export CSV');
     }
   };
@@ -107,7 +107,7 @@ export const InventoryView = () => {
       setHistoryItems(res.data);
       setHistoryItemName(item.name);
       setIsHistoryModalOpen(true);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch history.");
     }
   };
