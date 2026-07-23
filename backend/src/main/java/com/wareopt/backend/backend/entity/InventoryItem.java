@@ -47,6 +47,7 @@ public class InventoryItem {
     private LocalDateTime lastUpdated;
 
     @OneToMany(mappedBy = "inventoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<StockMovement> stockMovements = new ArrayList<>();
 
     @PrePersist

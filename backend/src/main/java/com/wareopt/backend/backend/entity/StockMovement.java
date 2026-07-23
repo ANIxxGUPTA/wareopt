@@ -13,6 +13,7 @@ public class StockMovement {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_item_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private InventoryItem inventoryItem;
 
     @Column(nullable = false)
