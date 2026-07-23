@@ -99,23 +99,6 @@ export const exportCsv = async () => {
   return response.data;
 };
 
-export const importCsv = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  try {
-    const response = await api.post('/inventory/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    if (error.response && error.response.data) {
-      throw error.response.data; // Throw the CsvImportResult DTO
-    }
-    throw error;
-  }
-};
 
 export const getInventoryItemHistory = (id: number) => api.get<StockMovement[]>(`/inventory/${id}/history`);
 
