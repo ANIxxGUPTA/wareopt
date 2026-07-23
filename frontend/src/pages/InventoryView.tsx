@@ -80,6 +80,38 @@ export const InventoryView = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const res = await exportInventoryCsv();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'inventory_export.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      setError('Failed to export CSV');
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      try {
+        await importInventoryCsv(file);
+        alert('Import successful!');
+        fetchData();
+      } catch (err: any) {
+        setError('Failed to import CSV');
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    }
+  };
+
   const formatCurrency = (value?: number) => {
     if (value === undefined || value === null) return '-';
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);

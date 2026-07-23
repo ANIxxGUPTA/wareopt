@@ -93,9 +93,43 @@ export const optimizeShifts = () => api.post<ShiftOptimizationResponse>('/optimi
 
 export const getInventory = () => api.get<InventoryItem[]>('/inventory');
 export const getLowStockInventory = () => api.get<InventoryItem[]>('/inventory/low-stock');
-export const createInventoryItem = (item: Partial<InventoryItem>) => api.post<InventoryItem>('/inventory', item);
-export const updateInventoryItem = (id: number, item: Partial<InventoryItem>) => api.put<InventoryItem>(`/inventory/${id}`, item);
-export const deleteInventoryItem = (id: number) => api.delete(`/inventory/${id}`);
+export const createInventoryItem = async (item: Omit<InventoryItem, 'id' | 'createdAt' | 'lastUpdated'>) => {
+  const response = await api.post<InventoryItem>('/inventory', item);
+  return response.data;
+};
+
+export const updateInventoryItem = async (id: number, item: Partial<InventoryItem>) => {
+  const response = await api.put<InventoryItem>(`/inventory/${id}`, item);
+  return response.data;
+};
+
+export const deleteInventoryItem = async (id: number) => {
+  await api.delete(`/inventory/${id}`);
+};
+
+export const exportCsv = async () => {
+  const response = await api.get('/inventory/export', { responseType: 'blob' });
+  return response.data;
+};
+
+export const importCsv = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const response = await api.post('/inventory/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw error.response.data; // Throw the CsvImportResult DTO
+    }
+    throw error;
+  }
+};
+
 export const getInventoryItemHistory = (id: number) => api.get<StockMovement[]>(`/inventory/${id}/history`);
 
 export const resetDatabase = () => api.delete('/reset');
