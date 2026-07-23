@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory, getInventoryItemHistory, exportCsv } from '../services/api';
+import { useEffect, useState, useRef } from 'react';
+import { getInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem, getLowStockInventory, getInventoryItemHistory, exportCsv, importCsv } from '../services/api';
 import type { InventoryItem, StockMovement } from '../services/api';
 import { AlertCircle, Edit2, Plus, Trash2, AlertTriangle, History } from 'lucide-react';
 import { Modal } from '../components/Modal';
@@ -12,6 +12,7 @@ export const InventoryView = () => {
   const [editingItem, setEditingItem] = useState<Partial<InventoryItem>>({});
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyItems, setHistoryItems] = useState<StockMovement[]>([]);
@@ -95,6 +96,28 @@ export const InventoryView = () => {
     }
   };
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      try {
+        await importCsv(file);
+        alert('Import successful!');
+        fetchData();
+      } catch (err: any) {
+        if (err.errors) {
+          const errorMsg = err.errors.map((e: any) => `Row ${e.row}: ${e.error}`).join('\n');
+          alert(`Import failed:\n${errorMsg}`);
+        } else {
+          setError('Failed to import CSV');
+        }
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    }
+  };
+
   const formatCurrency = (value?: number) => {
     if (value === undefined || value === null) return '-';
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
@@ -119,6 +142,19 @@ export const InventoryView = () => {
           <p className="text-sm text-gray-500">Manage warehouse stock, locations, and reorder levels.</p>
         </div>
         <div className="space-x-4">
+          <input 
+            type="file" 
+            accept=".csv" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleImport} 
+          />
+          <button 
+            className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Import CSV
+          </button>
           <button 
             className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition"
             onClick={handleExport}

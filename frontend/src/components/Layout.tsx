@@ -1,12 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Box, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Box } from 'lucide-react';
 import clsx from 'clsx';
-import { useAuth } from '../contexts/AuthContext';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const { logout } = useAuth();
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -45,16 +43,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             );
           })}
         </nav>
-        
-        <div className="p-4 border-t border-slate-800">
-          <button
-            onClick={logout}
-            className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
-        </div>
       </div>
 
       {/* Main Content */}
