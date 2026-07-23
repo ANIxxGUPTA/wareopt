@@ -54,7 +54,7 @@ export const InventoryView = () => {
       if (editingItem.id) {
         await updateInventoryItem(editingItem.id, editingItem);
       } else {
-        const newItem = { ...editingItem, quantityOnHand: 0 } as Omit<InventoryItem, 'id' | 'createdAt' | 'lastUpdated'>;
+        const newItem = { quantityOnHand: 0, ...editingItem } as Omit<InventoryItem, 'id' | 'createdAt' | 'lastUpdated'>;
         await createInventoryItem(newItem);
       }
       setIsModalOpen(false);
@@ -288,13 +288,10 @@ export const InventoryView = () => {
               <label className="block text-sm font-medium text-gray-700">Unit of Measure (e.g. kg, box)</label>
               <input type="text" value={editingItem?.unit || ''} onChange={e => setEditingItem({...editingItem, unit: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. kg" />
             </div>
-            {!editingItem?.id && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Initial Quantity</label>
-                <input disabled type="text" value="0" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50 text-gray-500" />
-                <p className="mt-1 text-xs text-gray-500">Use "Stock In" to add stock later.</p>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Quantity on Hand</label>
+              <input type="number" min="0" value={editingItem?.quantityOnHand ?? ''} onChange={e => setEditingItem({...editingItem, quantityOnHand: parseInt(e.target.value) || 0})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500" placeholder="0" />
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">

@@ -80,6 +80,18 @@ public class InventoryService {
         item.setReorderThreshold(itemDetails.getReorderThreshold());
         item.setCostPerUnit(itemDetails.getCostPerUnit());
 
+        if (itemDetails.getQuantityOnHand() != null && !itemDetails.getQuantityOnHand().equals(item.getQuantityOnHand())) {
+            int diff = itemDetails.getQuantityOnHand() - item.getQuantityOnHand();
+            item.setQuantityOnHand(itemDetails.getQuantityOnHand());
+            
+            StockMovement movement = new StockMovement();
+            movement.setInventoryItem(item);
+            movement.setChangeAmount(diff);
+            movement.setReason(MovementReason.MANUAL_ADJUSTMENT);
+            movement.setNote("Quantity adjusted via item edit");
+            stockMovementRepository.save(movement);
+        }
+
         return inventoryItemRepository.save(item);
     }
 
