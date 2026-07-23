@@ -7,6 +7,8 @@ import java.sql.Statement;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.wareopt.backend.backend.util.DatabaseConstants;
+
 public class ReseedDB {
     @Test
     public void runReseed() throws Exception {
@@ -19,7 +21,7 @@ public class ReseedDB {
              Statement stmt = conn.createStatement()) {
             
             System.out.println("Truncating all tables...");
-            stmt.execute("TRUNCATE TABLE workers, shifts, shift_assignments, stock_movements RESTART IDENTITY CASCADE;");
+            stmt.execute(DatabaseConstants.TRUNCATE_ALL_TABLES_SQL);
             
             System.out.println("Reading new SQL file...");
             String sql = new String(Files.readAllBytes(Paths.get("../db/999_seed.sql")));

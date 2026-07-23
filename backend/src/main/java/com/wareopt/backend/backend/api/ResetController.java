@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.wareopt.backend.backend.util.DatabaseConstants;
+
 @RestController
 @RequestMapping("/api/reset")
 public class ResetController {
@@ -16,8 +18,7 @@ public class ResetController {
 
     @DeleteMapping
     public ResponseEntity<Void> resetDatabase() {
-        String sql = "TRUNCATE TABLE inventory_items, workers, shifts, shift_assignments, stock_movements RESTART IDENTITY CASCADE";
-        jdbcTemplate.execute(sql);
+        jdbcTemplate.execute(DatabaseConstants.TRUNCATE_ALL_TABLES_SQL);
         return ResponseEntity.noContent().build();
     }
 }
